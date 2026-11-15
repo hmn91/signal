@@ -1,20 +1,28 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ScaleTempoDialog } from "./ScaleTempoDialog"
 
-afterEach(cleanup)
+beforeEach(() => vi.useFakeTimers())
+afterEach(() => {
+  cleanup()
+  vi.clearAllTimers()
+  vi.useRealTimers()
+})
+
+const advance = (milliseconds: number) =>
+  act(() => vi.advanceTimersByTime(milliseconds))
 
 const setup = () => {
   const onApply = vi.fn()
   const onClose = vi.fn()
-  render(
+  const view = render(
     <ScaleTempoDialog referenceBpm={120} onApply={onApply} onClose={onClose} />,
   )
-  return { onApply, onClose }
+  return { onApply, onClose, ...view }
 }
 
 const setupCircularDial = () => {
-  setup()
+  const callbacks = setup()
   const dial = screen.getByRole("slider")
   dial.setPointerCapture = vi.fn()
   dial.releasePointerCapture = vi.fn()
@@ -27,6 +35,7 @@ const setupCircularDial = () => {
     clientY: 160 + Math.sin((degrees * Math.PI) / 180) * 80,
   })
   return {
+    ...callbacks,
     dial,
     down: (degrees: number) =>
       fireEvent.pointerDown(dial, {
@@ -60,8 +69,10 @@ describe("ScaleTempoDialog", () => {
     expect(marker).toHaveAttribute("transform", "rotate(0 100 100)")
   })
 
-  it("links percentage and BPM, previewing without applying", () => {
-    const { onApply } = setup()
+  it("links percentage and BPM and automatically applies after 500ms", () => {
+    const { onApply, onClose } = setup()
+    advance(1000)
+    expect(onApply).not.toHaveBeenCalled()
     fireEvent.change(screen.getByLabelText("Tempo scale (%)"), {
       target: { value: "80" },
     })
@@ -69,9 +80,14 @@ describe("ScaleTempoDialog", () => {
     fireEvent.change(screen.getByLabelText("BPM"), { target: { value: "60" } })
     expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(50)
     expect(onApply).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole("button", { name: "OK" }))
+    advance(499)
+    expect(onApply).not.toHaveBeenCalled()
+    advance(1)
     expect(onApply).toHaveBeenCalledWith(50)
     expect(onApply).toHaveBeenCalledTimes(1)
+    expect(onClose).not.toHaveBeenCalled()
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "OK" })).not.toBeInTheDocument()
   })
 
   it("updates BPM while dragging and wheeling with limits at 1 and 200 percent", () => {
@@ -87,7 +103,6 @@ describe("ScaleTempoDialog", () => {
     fireEvent.wheel(slider, { deltaY: 100 })
     expect(screen.getByLabelText("BPM")).toHaveValue(1.2)
     expect(screen.getByRole("status")).toHaveTextContent("below 3.58 BPM")
-    expect(screen.getByRole("button", { name: "OK" })).toBeEnabled()
   })
 
   it.each([
@@ -100,20 +115,24 @@ describe("ScaleTempoDialog", () => {
     fireEvent.change(screen.getByLabelText("Tempo scale (%)"), {
       target: { value },
     })
-    expect(screen.getByRole("button", { name: "OK" })).toBeDisabled()
+    expect(screen.getByLabelText("Tempo scale (%)")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    )
     fireEvent.keyDown(screen.getByLabelText("Tempo scale (%)"), {
       key: "Enter",
     })
+    advance(1000)
     expect(onApply).not.toHaveBeenCalled()
   })
 
-  it("resets to the original reference and cancels without changing the song", () => {
-    const { onApply, onClose } = setup()
+  it("cancels a pending change when the dialog is closed", () => {
+    const { onApply, onClose, unmount } = setup()
     fireEvent.change(screen.getByLabelText("BPM"), { target: { value: "60" } })
-    fireEvent.click(screen.getByRole("button", { name: "Reset" }))
-    expect(screen.getByLabelText("BPM")).toHaveValue(120)
-    expect(screen.getByRole("button", { name: "OK" })).toBeEnabled()
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
+    advance(200)
+    fireEvent.click(screen.getByRole("button", { name: "Close" }))
+    unmount()
+    advance(1000)
     expect(onApply).not.toHaveBeenCalled()
     expect(onClose).toHaveBeenCalledTimes(1)
   })
@@ -129,9 +148,112 @@ describe("ScaleTempoDialog", () => {
       />,
     )
     expect(screen.getByLabelText("BPM")).toHaveValue(72)
+    advance(1000)
+    expect(onApply).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole("button", { name: "Reset" }))
-    fireEvent.click(screen.getByRole("button", { name: "OK" }))
+    advance(500)
     expect(onApply).toHaveBeenCalledWith(100)
+  })
+
+  it("waits for touch release even when the finger stops moving for longer than 500ms", () => {
+    const { dial, down, move, onApply } = setupCircularDial()
+    down(-90)
+    move(0)
+    advance(2000)
+    expect(onApply).not.toHaveBeenCalled()
+    fireEvent.pointerUp(dial, { pointerId: 1 })
+    advance(499)
+    expect(onApply).not.toHaveBeenCalled()
+    advance(1)
+    expect(onApply).toHaveBeenCalledExactlyOnceWith(166.7)
+  })
+
+  it("cancels an old deadline when the user grabs the dial again", () => {
+    const { dial, down, move, onApply } = setupCircularDial()
+    fireEvent.change(screen.getByLabelText("Tempo scale (%)"), {
+      target: { value: "80" },
+    })
+    advance(400)
+    down(0)
+    advance(1000)
+    expect(onApply).not.toHaveBeenCalled()
+    move(30)
+    fireEvent.pointerUp(dial, { pointerId: 1 })
+    const latest = Number(
+      (screen.getByLabelText("Tempo scale (%)") as HTMLInputElement).value,
+    )
+    advance(500)
+    expect(onApply).toHaveBeenCalledExactlyOnceWith(latest)
+  })
+
+  it("does not treat losing pointer capture as releasing a held finger", () => {
+    const { dial, down, move, onApply } = setupCircularDial()
+    down(-90)
+    move(0)
+    fireEvent.lostPointerCapture(dial, { pointerId: 1, buttons: 1 })
+    advance(2000)
+    expect(onApply).not.toHaveBeenCalled()
+    fireEvent.pointerUp(window, { pointerId: 1 })
+    advance(500)
+    expect(onApply).toHaveBeenCalledExactlyOnceWith(166.7)
+  })
+
+  it("debounces typing, cancels invalid input and resets automatically", () => {
+    const { onApply } = setup()
+    const input = screen.getByLabelText("Tempo scale (%)")
+    fireEvent.change(input, { target: { value: "80" } })
+    advance(300)
+    fireEvent.change(input, { target: { value: "60" } })
+    advance(499)
+    expect(onApply).not.toHaveBeenCalled()
+    advance(1)
+    expect(onApply).toHaveBeenCalledExactlyOnceWith(60)
+    fireEvent.change(input, { target: { value: "50" } })
+    advance(400)
+    fireEvent.change(input, { target: { value: "" } })
+    advance(1000)
+    expect(onApply).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByRole("button", { name: "Reset" }))
+    advance(500)
+    expect(onApply).toHaveBeenLastCalledWith(100)
+    expect(onApply).toHaveBeenCalledTimes(2)
+  })
+
+  it("waits for a held mouse input spinner to release outside the dialog", () => {
+    const { onApply } = setup()
+    const input = screen.getByLabelText("Tempo scale (%)")
+    fireEvent.pointerDown(input, {
+      pointerId: 7,
+      pointerType: "mouse",
+      button: 0,
+    })
+    fireEvent.change(input, { target: { value: "80" } })
+    advance(1000)
+    expect(onApply).not.toHaveBeenCalled()
+    fireEvent.pointerUp(window, { pointerId: 7 })
+    advance(500)
+    expect(onApply).toHaveBeenCalledExactlyOnceWith(80)
+  })
+
+  it("uses the latest callback without restarting the deadline or applying twice", () => {
+    const { onApply, rerender } = setup()
+    fireEvent.change(screen.getByLabelText("Tempo scale (%)"), {
+      target: { value: "80" },
+    })
+    advance(400)
+    const latestApply = vi.fn()
+    rerender(
+      <ScaleTempoDialog
+        referenceBpm={120}
+        onApply={latestApply}
+        onClose={vi.fn()}
+      />,
+    )
+    advance(100)
+    expect(onApply).not.toHaveBeenCalled()
+    expect(latestApply).toHaveBeenCalledExactlyOnceWith(80)
+    advance(1000)
+    expect(latestApply).toHaveBeenCalledTimes(1)
   })
 
   it("turns clockwise and counterclockwise with a finger, without jumping on grab", () => {

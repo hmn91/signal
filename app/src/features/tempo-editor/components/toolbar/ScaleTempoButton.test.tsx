@@ -2,7 +2,7 @@ import { SongStore } from "@signal-app/core"
 import { createTempoEditor } from "@signal-app/tempo-editor"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { Provider } from "jotai"
-import { afterEach, expect, it } from "vitest"
+import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { useHistory } from "../../../../hooks/useHistory"
 import { StoreContext } from "../../../../hooks/useStores"
 import {
@@ -13,7 +13,20 @@ import type RootStore from "../../../../stores/RootStore"
 import { TempoEditorProvider } from "../../context/TempoEditorProvider"
 import { ScaleTempoButton } from "./ScaleTempoButton"
 
-afterEach(cleanup)
+beforeEach(() => vi.useFakeTimers())
+afterEach(() => {
+  cleanup()
+  vi.clearAllTimers()
+  vi.useRealTimers()
+})
+
+const advance = (milliseconds: number) =>
+  act(() => vi.advanceTimersByTime(milliseconds))
+
+function finishAdjustment() {
+  advance(500)
+  fireEvent.click(screen.getByRole("button", { name: "Close" }))
+}
 
 function HistoryControls() {
   const { undo, redo, hasUndo } = useHistory()
@@ -59,7 +72,7 @@ function applyPercent(percent: number) {
   fireEvent.change(screen.getByLabelText("Tempo scale (%)"), {
     target: { value: String(percent) },
   })
-  fireEvent.click(screen.getByRole("button", { name: "OK" }))
+  finishAdjustment()
 }
 
 it("uses the selected position as reference and scales the whole song in one undo step", () => {
@@ -73,7 +86,10 @@ it("uses the selected position as reference and scales the whole song in one und
   })
   expect(screen.getByLabelText("BPM")).toHaveValue(48)
   expect(editor.listItems()[0].bpm).toBe(120)
-  fireEvent.click(screen.getByRole("button", { name: "OK" }))
+  advance(499)
+  expect(editor.listItems()[0].bpm).toBe(120)
+  advance(1)
+  fireEvent.click(screen.getByRole("button", { name: "Close" }))
   editor
     .listItems()
     .forEach((item, i) => expect(item.bpm).toBeCloseTo([60, 48, 36][i], 3))
@@ -98,13 +114,13 @@ it("uses absolute percentages on reopening and resets the original tempo map", (
   fireEvent.change(screen.getByLabelText("Tempo scale (%)"), {
     target: { value: "60" },
   })
-  fireEvent.click(screen.getByRole("button", { name: "OK" }))
+  finishAdjustment()
   expect(songStore.song.conductorTrack?.getTempo(0)).toBeCloseTo(72, 3)
 
-  // Reopen and restore the entire original map through Reset + OK.
+  // Reopen and restore the entire original map through automatic Reset.
   fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
   fireEvent.click(screen.getByRole("button", { name: "Reset" }))
-  fireEvent.click(screen.getByRole("button", { name: "OK" }))
+  finishAdjustment()
   expect(songStore.song.conductorTrack?.getTempo(0)).toBe(120)
   expect(songStore.song.conductorTrack?.getTempo(480)).toBe(96)
 })
@@ -117,11 +133,31 @@ it("keeps a saved baseline after undo and resets to that saved map", () => {
   fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
   expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(100)
   expect(screen.getByLabelText("BPM")).toHaveValue(48)
-  fireEvent.click(screen.getByRole("button", { name: "Cancel" }))
+  fireEvent.click(screen.getByRole("button", { name: "Close" }))
   fireEvent.click(screen.getByRole("button", { name: "Undo" }))
   fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
   expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(200)
   fireEvent.click(screen.getByRole("button", { name: "Reset" }))
-  fireEvent.click(screen.getByRole("button", { name: "OK" }))
+  finishAdjustment()
   expect(songStore.song.conductorTrack?.getTempo(480)).toBe(48)
+})
+
+it("applies repeated adjustments in the same dialog with one undo step per settled value", () => {
+  const { songStore } = setup()
+  fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
+  const input = screen.getByLabelText("Tempo scale (%)")
+  fireEvent.change(input, { target: { value: "40" } })
+  advance(500)
+  expect(songStore.song.conductorTrack?.getTempo(0)).toBe(48)
+  fireEvent.change(input, { target: { value: "80" } })
+  advance(300)
+  fireEvent.change(input, { target: { value: "60" } })
+  advance(500)
+  expect(songStore.song.conductorTrack?.getTempo(0)).toBeCloseTo(72, 3)
+  fireEvent.click(screen.getByRole("button", { name: "Close" }))
+  fireEvent.click(screen.getByRole("button", { name: "Undo" }))
+  expect(songStore.song.conductorTrack?.getTempo(0)).toBe(48)
+  fireEvent.click(screen.getByRole("button", { name: "Undo" }))
+  expect(songStore.song.conductorTrack?.getTempo(0)).toBe(120)
+  expect(screen.getByRole("button", { name: "Undo" })).toBeDisabled()
 })

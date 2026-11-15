@@ -6,10 +6,9 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
-  PrimaryButton,
   TextField,
 } from "@signal-app/ui"
-import { useId, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { Localized } from "../../../localize/useLocalization"
 import { TempoDial } from "./TempoDial"
 
@@ -58,6 +57,33 @@ export function ScaleTempoDialog({
     mode: "percent",
     value: formatValue(initialPercent),
   })
+  const [editVersion, setEditVersion] = useState(0)
+  const [isPointerDown, setIsPointerDown] = useState(false)
+  const activePointers = useRef(new Set<number>())
+  const appliedVersion = useRef(0)
+  const applyRef = useRef(onApply)
+  const changeInput = (mode: string, value: string) => {
+    setInput({ mode, value })
+    setEditVersion((version) => version + 1)
+  }
+
+  useEffect(() => {
+    applyRef.current = onApply
+  }, [onApply])
+
+  useEffect(() => {
+    const finishPointer = (event: PointerEvent) => {
+      activePointers.current.delete(event.pointerId)
+      setIsPointerDown(activePointers.current.size > 0)
+    }
+    // Input spinners and captured dial gestures can end outside the dialog.
+    window.addEventListener("pointerup", finishPointer, true)
+    window.addEventListener("pointercancel", finishPointer, true)
+    return () => {
+      window.removeEventListener("pointerup", finishPointer, true)
+      window.removeEventListener("pointercancel", finishPointer, true)
+    }
+  }, [])
   const value = input.value.trim() === "" ? NaN : Number(input.value)
   const rawPercent =
     input.mode === "percent" ? value : (value / referenceBpm) * 100
@@ -65,12 +91,19 @@ export function ScaleTempoDialog({
   const percent = Number(rawPercent.toFixed(10))
   const bpm = input.mode === "bpm" ? value : (referenceBpm * percent) / 100
   const valid = Number.isFinite(percent) && percent >= 1 && percent <= 200
-  const apply = () => {
-    if (valid) {
-      onApply(percent)
-      onClose()
+  useEffect(() => {
+    if (!valid || isPointerDown || editVersion === appliedVersion.current) {
+      return
     }
-  }
+    const timer = window.setTimeout(() => {
+      if (activePointers.current.size > 0) {
+        return
+      }
+      appliedVersion.current = editVersion
+      applyRef.current(percent)
+    }, 500)
+    return () => window.clearTimeout(timer)
+  }, [percent, valid, editVersion, isPointerDown])
 
   return (
     <Dialog
@@ -88,7 +121,12 @@ export function ScaleTempoDialog({
         <DialogDescription>
           <Localized name="scale-song-tempo-description" />
         </DialogDescription>
-        <Controls>
+        <Controls
+          onPointerDownCapture={(e) => {
+            activePointers.current.add(e.pointerId)
+            setIsPointerDown(true)
+          }}
+        >
           <div>
             <Localized name="tempo-at-selected-position" />:{" "}
             {referenceBpm.toFixed(2)} BPM
@@ -96,9 +134,7 @@ export function ScaleTempoDialog({
           <TempoDial
             percent={percent}
             bpm={bpm}
-            onChange={(percent) =>
-              setInput({ mode: "percent", value: formatValue(percent) })
-            }
+            onChange={(percent) => changeInput("percent", formatValue(percent))}
           />
           <div
             style={{
@@ -127,10 +163,7 @@ export function ScaleTempoDialog({
                       ? formatValue(percent)
                       : ""
                 }
-                onChange={(e) =>
-                  setInput({ mode: "percent", value: e.target.value })
-                }
-                onKeyDown={(e) => e.key === "Enter" && apply()}
+                onChange={(e) => changeInput("percent", e.target.value)}
                 aria-invalid={!valid}
                 aria-describedby={`${id}-limits`}
               />
@@ -151,10 +184,7 @@ export function ScaleTempoDialog({
                       ? formatValue(bpm)
                       : ""
                 }
-                onChange={(e) =>
-                  setInput({ mode: "bpm", value: e.target.value })
-                }
-                onKeyDown={(e) => e.key === "Enter" && apply()}
+                onChange={(e) => changeInput("bpm", e.target.value)}
                 aria-invalid={!valid}
                 aria-describedby={`${id}-limits`}
               />
@@ -170,16 +200,18 @@ export function ScaleTempoDialog({
           )}
         </Controls>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setInput({ mode: "percent", value: "100" })}>
+      <DialogActions
+        onPointerDownCapture={(e) => {
+          activePointers.current.add(e.pointerId)
+          setIsPointerDown(true)
+        }}
+      >
+        <Button onClick={() => changeInput("percent", "100")}>
           <Localized name="reset" />
         </Button>
         <Button onClick={onClose}>
-          <Localized name="cancel" />
+          <Localized name="close" />
         </Button>
-        <PrimaryButton disabled={!valid} onClick={apply}>
-          <Localized name="ok" />
-        </PrimaryButton>
       </DialogActions>
     </Dialog>
   )
