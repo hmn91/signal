@@ -129,6 +129,47 @@ describe("Song", () => {
     expect(song.tracks[2]).toBe(first)
   })
 
+  it("reorders tracks in one change and keeps identities and MIDI channels", () => {
+    const song = emptySong()
+    song.addNewTrack()
+    const [conductor, first, second] = song.tracks
+    const channels = song.tracks.map((track) => track.channel)
+    const changed = vi.fn()
+    song.onTracksChanged.subscribe(changed)
+    song.isSaved = true
+
+    song.reorderTracks([conductor.id, second.id, first.id])
+
+    expect(song.tracks).toEqual([conductor, second, first])
+    expect(song.tracks.map((track) => track.channel)).toEqual([
+      channels[0],
+      channels[2],
+      channels[1],
+    ])
+    expect(changed).toHaveBeenCalledTimes(1)
+    expect(song.isSaved).toBe(false)
+    expect(
+      Song.deserialize(song.serialize()).tracks.map((track) => track.id),
+    ).toEqual([conductor.id, second.id, first.id])
+  })
+
+  it("rejects incomplete, duplicate and stale track orders without dirtying the song", () => {
+    const song = emptySong()
+    const ids = song.tracks.map((track) => track.id)
+    const changed = vi.fn()
+    song.onTracksChanged.subscribe(changed)
+    song.isSaved = true
+
+    song.reorderTracks(ids.slice(1))
+    song.reorderTracks(ids.map(() => ids[0]))
+    song.reorderTracks(ids)
+    song.reorderTracks([...ids.slice(1), 999 as (typeof ids)[number]])
+
+    expect(song.tracks.map((track) => track.id)).toEqual(ids)
+    expect(changed).not.toHaveBeenCalled()
+    expect(song.isSaved).toBe(true)
+  })
+
   it("should restore measures when opening midi", () => {
     const song = emptySong()
     song.timebase = 960
