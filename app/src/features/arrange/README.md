@@ -14,6 +14,7 @@ The arrangement view: all tracks on one timeline, for editing sections and track
 - Select ranges across tracks. Move, duplicate, delete, copy, and paste them.
 - Transpose a selection and change its velocity.
 - Track actions, such as inserting and duplicating tracks.
+- Notes and track headers share the track colors used in the piano roll.
 
 ## Design Notes
 

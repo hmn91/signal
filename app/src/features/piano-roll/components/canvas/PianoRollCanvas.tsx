@@ -21,6 +21,7 @@ import { GhostNotes } from "./GhostNotes"
 import { Lines } from "./Lines"
 import { NoteSelection } from "./NoteSelection"
 import { Notes } from "./Notes"
+import { OverlappingNotes } from "./OverlappingNotes"
 
 export interface PianoRollCanvasProps {
   width: number
@@ -110,6 +111,7 @@ export const PianoRollCanvas: FC<PianoRollCanvasProps> = ({
             <GhostNotes key={trackId} trackId={trackId} zIndex={2} />
           ))}
           <Notes zIndex={3} />
+          <OverlappingNotes />
           <NoteSelection zIndex={4} />
         </Transform>
       </GLCanvas>

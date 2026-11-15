@@ -17,6 +17,7 @@ import { useContextMenu } from "../../../hooks/useContextMenu"
 import { useRouter } from "../../../hooks/useRouter"
 import { useToggleGhostTrack } from "../../../hooks/useToggleGhostTrack"
 import { useTrack } from "../../../hooks/useTrack"
+import { useTrackColor } from "../../../hooks/useTrackColor"
 import { useTrackMute } from "../../../hooks/useTrackMute"
 import { InstrumentBrowser } from "../../instrument-browser"
 import { usePianoRoll } from "../../piano-roll/hooks/usePianoRoll"
@@ -184,10 +185,10 @@ const _TrackListItem: FC<TrackListItemProps> = ({ trackId }) => {
     isConductorTrack,
     programNumber,
     isRhythmTrack,
-    color: trackColor,
     isMuted,
     isSolo,
   } = useTrack(trackId)
+  const trackColor = useTrackColor(trackId)
   const { setPath } = useRouter()
   const { toggleMute: toggleMuteTrack, toggleSolo: toggleSoloTrack } =
     useTrackMute()
@@ -261,12 +262,12 @@ const _TrackListItem: FC<TrackListItemProps> = ({ trackId }) => {
 
   useMIDIActivity(trackId, onActivity)
 
-  const color =
-    trackColor !== undefined ? trackColorToCSSColor(trackColor) : "transparent"
+  const color = trackColorToCSSColor(trackColor)
 
   return (
     <>
       <Container
+        data-track-id={trackId}
         data-selected={selected}
         onMouseDown={onSelectTrack}
         onContextMenu={onContextMenu}

@@ -17,3 +17,4 @@ The track list and per-track controls.
 ## Design Notes
 
 - Track changes are song-level edits and are part of undo and redo.
+- Track icons and notes use the MIDI track color when present, otherwise an automatic color derived from the track ID. Reordering does not change the color.

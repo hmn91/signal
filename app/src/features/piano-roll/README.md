@@ -13,6 +13,7 @@ The main note editing surface.
 - Draw the note grid, notes, and keyboard.
 - Create, select, move, resize, and delete notes.
 - Show other tracks' notes as ghost notes.
+- Draw shared notes as stacked color stripes over their overlapping sections, including overlaps between ghost tracks. Hit areas still belong to the selected track.
 - Quantize, transpose, copy, and paste notes. Preview notes while editing.
 - Coordinate nearby panes, such as the control pane and event list.
 

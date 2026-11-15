@@ -11,6 +11,7 @@ import {
   VerticalScaleScrollBar,
 } from "../../../components/inputs/ScaleScrollBar"
 import { BAR_WIDTH } from "../../../components/inputs/ScrollBar"
+import { TrackColorDot } from "../../../components/TrackColorDot"
 import { isTouchPadEvent } from "../../../helpers/touchpad"
 import { useContextMenu } from "../../../hooks/useContextMenu"
 import { useRouter } from "../../../hooks/useRouter"
@@ -202,6 +203,7 @@ export const ArrangeView: FC = () => {
                 onTrackContextMenu(e)
               }}
             >
+              <TrackColorDot trackId={t.id} />
               <TrackName trackId={t.id} />
             </TrackHeader>
           ))}

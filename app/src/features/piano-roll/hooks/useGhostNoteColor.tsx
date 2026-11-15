@@ -3,7 +3,7 @@ import { type TrackId, trackColorToVec4 } from "@signal-app/core"
 import Color from "color"
 import { vec4 } from "gl-matrix"
 import { colorToVec4 } from "../../../gl/color"
-import { useTrack } from "../../../hooks/useTrack"
+import { useTrackColor } from "../../../hooks/useTrackColor"
 
 interface NoteStyle {
   inactiveColor: vec4
@@ -14,15 +14,17 @@ interface NoteStyle {
 
 export const useGhostNoteColor = (trackId: TrackId): NoteStyle => {
   const theme = useTheme()
-  const { color } = useTrack(trackId)
+  const color = useTrackColor(trackId)
 
   const ghostNoteColor = colorToVec4(Color(theme.ghostNoteColor))
   const transparentColor = vec4.zero(vec4.create())
-  const trackColor = color !== undefined ? trackColorToVec4(color) : null
-  const ghostedColor =
-    trackColor !== null
-      ? vec4.lerp(vec4.create(), trackColor, ghostNoteColor, 0.7)
-      : ghostNoteColor
+  const trackColor = trackColorToVec4(color)
+  const ghostedColor = vec4.lerp(
+    vec4.create(),
+    trackColor,
+    ghostNoteColor,
+    0.18,
+  )
 
   return {
     inactiveColor: transparentColor,
