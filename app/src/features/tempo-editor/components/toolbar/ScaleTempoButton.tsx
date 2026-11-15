@@ -5,7 +5,7 @@ import {
 } from "@signal-app/tempo-editor"
 import { ToolbarButton, Tooltip } from "@signal-app/ui"
 import { isEqual } from "lodash"
-import SpeedometerIcon from "mdi-react/SpeedometerIcon"
+import ResizeIcon from "mdi-react/ResizeIcon"
 import { useState } from "react"
 import { useHistory } from "../../../../hooks/useHistory"
 import { useStores } from "../../../../hooks/useStores"
@@ -62,7 +62,7 @@ export function ScaleTempoButton() {
             })
           }}
         >
-          <SpeedometerIcon size="1.2rem" aria-hidden="true" />
+          <ResizeIcon size="1.2rem" aria-hidden="true" />
         </ToolbarButton>
       </Tooltip>
       {adjustment !== null && (
