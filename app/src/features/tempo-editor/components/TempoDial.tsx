@@ -6,14 +6,14 @@ import { tempoScaleColor } from "../helpers/tempoScaleColor"
 const Dial = styled.div`
   position: relative;
   align-self: center;
-  width: 13rem;
-  height: 13rem;
+  width: min(100%, 18rem);
+  aspect-ratio: 1;
+  flex-shrink: 0;
   border-radius: 50%;
   touch-action: none;
   user-select: none;
   cursor: grab;
   outline: none;
-  background: radial-gradient(circle, var(--color-background) 48%, var(--color-divider) 100%);
 
   &:focus-visible { box-shadow: 0 0 0 3px var(--color-theme); }
   &:active { cursor: grabbing; }
@@ -26,22 +26,12 @@ const Dial = styled.div`
   }
 `
 
-const Readout = styled.div`
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
-  strong { font-size: 2rem; }
-  span { color: var(--color-text-secondary); }
-`
-
 const clamp = (value: number) =>
   Math.min(200, Math.max(1, Math.round(value * 10) / 10))
+
+const ticks = [1, ...Array.from({ length: 20 }, (_, index) => (index + 1) * 10)]
+const scalePosition = (value: number) =>
+  (value - 100) / (value < 100 ? 99 : 100)
 
 function getPointerAngle(target: HTMLElement, x: number, y: number) {
   const rect = target.getBoundingClientRect()
@@ -72,7 +62,7 @@ export function TempoDial({
     position: number
   } | null>(null)
   // Split the two halves so exactly 100%, rather than 100.5%, is at 12 o'clock.
-  const position = (value - 100) / (value < 100 ? 99 : 100)
+  const position = scalePosition(value)
   const angle = position * 135
   const change = (next: number) => onChange(clamp(next))
 
@@ -162,9 +152,40 @@ export function TempoDial({
         }
       }}
     >
-      <svg viewBox="0 0 200 200" aria-hidden="true">
+      <svg viewBox="0 0 240 240" aria-hidden="true">
+        {ticks.map((tick) => {
+          const major = tick === 1 || tick % 50 === 0
+          const tickAngle = scalePosition(tick) * 135
+          return (
+            <g key={tick} data-tempo-tick={tick}>
+              <line
+                x1={120}
+                y1={14}
+                x2={120}
+                y2={major ? 27 : 21}
+                stroke="var(--color-text-secondary)"
+                strokeWidth={major ? 1.5 : 1}
+                opacity={major ? 0.9 : 0.5}
+                transform={`rotate(${tickAngle} 120 120)`}
+              />
+              {major && (
+                <text
+                  x={120 + Math.sin((tickAngle * Math.PI) / 180) * 115}
+                  y={120 - Math.cos((tickAngle * Math.PI) / 180) * 115}
+                  dy="0.35em"
+                  textAnchor="middle"
+                  fontSize={9}
+                  fontWeight={tick === 100 ? 700 : 400}
+                  fill="var(--color-text-secondary)"
+                >
+                  {tick}%
+                </text>
+              )}
+            </g>
+          )
+        })}
         <path
-          d="M39.19 160.81 A86 86 0 1 1 160.81 160.81"
+          d="M57.77 182.23 A88 88 0 1 1 182.23 182.23"
           pathLength={2}
           fill="none"
           stroke="var(--color-divider)"
@@ -172,7 +193,7 @@ export function TempoDial({
           strokeLinecap="round"
         />
         <path
-          d="M39.19 160.81 A86 86 0 1 1 160.81 160.81"
+          d="M57.77 182.23 A88 88 0 1 1 182.23 182.23"
           pathLength={2}
           fill="none"
           stroke="currentColor"
@@ -180,21 +201,33 @@ export function TempoDial({
           strokeLinecap="round"
           strokeDasharray={`${position + 1} 2`}
         />
+        <circle
+          cx={120}
+          cy={120}
+          r={68}
+          fill="var(--color-background-dark)"
+          stroke="var(--color-divider)"
+          strokeWidth={1.5}
+        />
+        <circle
+          cx={120}
+          cy={120}
+          r={62}
+          fill="var(--color-background)"
+          stroke="var(--color-divider)"
+        />
         <line
-          x1={100}
-          y1={27}
-          x2={100}
-          y2={43}
+          data-tempo-indicator="true"
+          x1={120}
+          y1={62}
+          x2={120}
+          y2={80}
           stroke="currentColor"
           strokeWidth={5}
           strokeLinecap="round"
-          transform={`rotate(${angle} 100 100)`}
+          transform={`rotate(${angle} 120 120)`}
         />
       </svg>
-      <Readout aria-hidden="true">
-        <strong>{value}%</strong>
-        <span>{Number.isFinite(bpm) ? bpm.toFixed(2) : "—"} BPM</span>
-      </Readout>
     </Dial>
   )
 }

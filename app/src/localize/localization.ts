@@ -4,10 +4,8 @@ export default {
       "Turn clockwise to increase · Counterclockwise to decrease",
     "tempo-midi-limit":
       "The resulting song contains tempos below 3.58 BPM, which standard MIDI export cannot preserve.",
-    "scale-song-tempo": "Scale Song Tempo",
-    "scale-song-tempo-description":
-      "Changes apply automatically 0.5 seconds after you release and stop adjusting. Percentages use the original MIDI tempo map. Reset restores 100%. Saving a MIDI file sets a new baseline.",
-    "tempo-at-selected-position": "Original BPM at selected position",
+    "scale-song-tempo": "Scale Tempo",
+    "tempo-at-selected-position": "Original BPM",
     "tempo-percentage": "Tempo scale",
     "piano-roll": "Piano Roll",
     tempo: "Tempo",
@@ -388,10 +386,8 @@ export default {
       "Tourner dans le sens horaire pour augmenter · En sens inverse pour diminuer",
     "tempo-midi-limit":
       "Le morceau contient des tempos inférieurs à 3,58 BPM que l’export MIDI standard ne peut pas conserver.",
-    "scale-song-tempo": "Ajuster le tempo du morceau",
-    "scale-song-tempo-description":
-      "Les changements s’appliquent automatiquement 0,5 seconde après avoir relâché et terminé le réglage. Les pourcentages utilisent les tempos MIDI d’origine. Réinitialiser restaure 100 %. Enregistrer un fichier MIDI définit une nouvelle référence.",
-    "tempo-at-selected-position": "BPM d’origine à la position sélectionnée",
+    "scale-song-tempo": "Ajuster le tempo",
+    "tempo-at-selected-position": "BPM d’origine",
     "tempo-percentage": "Échelle du tempo",
     "piano-roll": "Rouleau de piano",
     tempo: "Tempo",
@@ -773,10 +769,8 @@ export default {
     "tempo-dial-help": "時計回りで上げる · 反時計回りで下げる",
     "tempo-midi-limit":
       "変更後に3.58 BPM未満のテンポが含まれます。標準MIDIではこのテンポを正しく書き出せません。",
-    "scale-song-tempo": "曲全体のテンポを変更",
-    "scale-song-tempo-description":
-      "指やマウスを離し、調整を止めてから0.5秒後に自動適用されます。比率は元のMIDIのテンポを基準にします。リセットで100%に戻ります。MIDIファイルの保存で基準が更新されます。",
-    "tempo-at-selected-position": "選択位置の元のBPM",
+    "scale-song-tempo": "テンポを変更",
+    "tempo-at-selected-position": "元のBPM",
     "tempo-percentage": "テンポの比率",
     "piano-roll": "ピアノロール",
     tempo: "テンポ",
@@ -1152,10 +1146,8 @@ export default {
     "tempo-dial-help": "顺时针旋转加快 · 逆时针旋转减慢",
     "tempo-midi-limit":
       "调整后的曲目包含低于 3.58 BPM 的速度，标准 MIDI 导出无法保留这些速度。",
-    "scale-song-tempo": "调整全曲速度",
-    "scale-song-tempo-description":
-      "松手并停止调整 0.5 秒后自动应用。百分比始终基于原始 MIDI 速度，重置恢复 100%。保存 MIDI 文件后更新基准。",
-    "tempo-at-selected-position": "所选位置的原始 BPM",
+    "scale-song-tempo": "调整速度",
+    "tempo-at-selected-position": "原始 BPM",
     "tempo-percentage": "速度比例",
     "piano-roll": "钢琴卷",
     tempo: "速度",
@@ -1532,10 +1524,8 @@ export default {
     "tempo-dial-help": "順時針旋轉加快 · 逆時針旋轉減慢",
     "tempo-midi-limit":
       "調整後的曲目包含低於 3.58 BPM 的速度，標準 MIDI 匯出無法保留這些速度。",
-    "scale-song-tempo": "調整全曲速度",
-    "scale-song-tempo-description":
-      "放手並停止調整 0.5 秒後自動套用。百分比始終基於原始 MIDI 速度，重設恢復 100%。儲存 MIDI 檔案後更新基準。",
-    "tempo-at-selected-position": "所選位置的原始 BPM",
+    "scale-song-tempo": "調整速度",
+    "tempo-at-selected-position": "原始 BPM",
     "tempo-percentage": "速度比例",
     "piano-roll": "鋼琴卷軸",
     tempo: "速度",
@@ -1912,10 +1902,8 @@ export default {
       "Otáčaním v smere hodinových ručičiek zvýšite · Opačne znížite",
     "tempo-midi-limit":
       "Výsledná skladba obsahuje tempá pod 3,58 BPM, ktoré štandardný export MIDI nedokáže zachovať.",
-    "scale-song-tempo": "Upraviť tempo celej skladby",
-    "scale-song-tempo-description":
-      "Zmeny sa použijú automaticky 0,5 sekundy po uvoľnení a ukončení úprav. Percentá vychádzajú z pôvodných temp MIDI. Reset obnoví 100 %. Uloženie súboru MIDI nastaví nový základ.",
-    "tempo-at-selected-position": "Pôvodné BPM na vybranej pozícii",
+    "scale-song-tempo": "Upraviť tempo",
+    "tempo-at-selected-position": "Pôvodné BPM",
     "tempo-percentage": "Pomer tempa",
     "piano-roll": "Piano Roll",
     tempo: "Tempo",

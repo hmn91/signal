@@ -68,7 +68,7 @@ function setup() {
 }
 
 function applyPercent(percent: number) {
-  fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
+  fireEvent.click(screen.getByRole("button", { name: "Scale Tempo" }))
   fireEvent.change(screen.getByLabelText("Tempo scale (%)"), {
     target: { value: String(percent) },
   })
@@ -77,7 +77,7 @@ function applyPercent(percent: number) {
 
 it("uses the selected position as reference and scales the whole song in one undo step", () => {
   const { songStore, player, editor } = setup()
-  fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
+  fireEvent.click(screen.getByRole("button", { name: "Scale Tempo" }))
   expect(screen.getByLabelText("BPM")).toHaveValue(96)
   // Playback moving while the dialog is open must not change its reference.
   player.position = 1000
@@ -108,7 +108,7 @@ it("uses absolute percentages on reopening and resets the original tempo map", (
   const { songStore } = setup()
   applyPercent(50)
   // A second adjustment is absolute relative to the file, never compounded.
-  fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
+  fireEvent.click(screen.getByRole("button", { name: "Scale Tempo" }))
   expect(screen.getByLabelText("BPM")).toHaveValue(48)
   expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(50)
   fireEvent.change(screen.getByLabelText("Tempo scale (%)"), {
@@ -118,7 +118,7 @@ it("uses absolute percentages on reopening and resets the original tempo map", (
   expect(songStore.song.conductorTrack?.getTempo(0)).toBeCloseTo(72, 3)
 
   // Reopen and restore the entire original map through automatic Reset.
-  fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
+  fireEvent.click(screen.getByRole("button", { name: "Scale Tempo" }))
   fireEvent.click(screen.getByRole("button", { name: "Reset" }))
   finishAdjustment()
   expect(songStore.song.conductorTrack?.getTempo(0)).toBe(120)
@@ -130,12 +130,12 @@ it("keeps a saved baseline after undo and resets to that saved map", () => {
   // A successful MIDI save defines the new 100%; undoing must not undo that save.
   applyPercent(50)
   commitTempoBaseline(songStore.song, captureTempoSnapshot(songStore.song))
-  fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
+  fireEvent.click(screen.getByRole("button", { name: "Scale Tempo" }))
   expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(100)
   expect(screen.getByLabelText("BPM")).toHaveValue(48)
   fireEvent.click(screen.getByRole("button", { name: "Close" }))
   fireEvent.click(screen.getByRole("button", { name: "Undo" }))
-  fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
+  fireEvent.click(screen.getByRole("button", { name: "Scale Tempo" }))
   expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(200)
   fireEvent.click(screen.getByRole("button", { name: "Reset" }))
   finishAdjustment()
@@ -144,7 +144,7 @@ it("keeps a saved baseline after undo and resets to that saved map", () => {
 
 it("applies repeated adjustments in the same dialog with one undo step per settled value", () => {
   const { songStore } = setup()
-  fireEvent.click(screen.getByRole("button", { name: "Scale Song Tempo" }))
+  fireEvent.click(screen.getByRole("button", { name: "Scale Tempo" }))
   const input = screen.getByLabelText("Tempo scale (%)")
   fireEvent.change(input, { target: { value: "40" } })
   advance(500)

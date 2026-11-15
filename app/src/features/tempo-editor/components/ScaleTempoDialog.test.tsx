@@ -58,15 +58,43 @@ describe("ScaleTempoDialog", () => {
   it("centres 100 percent at 12 o'clock with symmetric endpoint angles", () => {
     setup()
     const dial = screen.getByRole("slider")
-    const marker = dial.querySelector("line")
-    expect(marker).toHaveAttribute("transform", "rotate(0 100 100)")
+    const marker = dial.querySelector("[data-tempo-indicator]")
+    expect(marker).toHaveAttribute("transform", "rotate(0 120 120)")
     expect(dial).toHaveAttribute("aria-valuemax", "200")
     fireEvent.keyDown(dial, { key: "Home" })
-    expect(marker).toHaveAttribute("transform", "rotate(-135 100 100)")
+    expect(marker).toHaveAttribute("transform", "rotate(-135 120 120)")
     fireEvent.keyDown(dial, { key: "End" })
-    expect(marker).toHaveAttribute("transform", "rotate(135 100 100)")
+    expect(marker).toHaveAttribute("transform", "rotate(135 120 120)")
     fireEvent.click(screen.getByRole("button", { name: "Reset" }))
-    expect(marker).toHaveAttribute("transform", "rotate(0 100 100)")
+    expect(marker).toHaveAttribute("transform", "rotate(0 120 120)")
+  })
+
+  it("shows the compact header, original BPM with Reset, editable fields, then the graduated knob", () => {
+    setup()
+    expect(
+      screen.getByRole("heading", { name: "Scale Tempo" }),
+    ).toBeInTheDocument()
+    const original = screen.getByText(/^Original BPM:/)
+    expect(original).toHaveTextContent("Original BPM: 120.00")
+    expect(original.parentElement).toContainElement(
+      screen.getByRole("button", { name: "Reset" }),
+    )
+    const dial = screen.getByRole("slider")
+    expect(
+      screen.getByLabelText("BPM").compareDocumentPosition(dial) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(dial.querySelectorAll("[data-tempo-tick]")).toHaveLength(21)
+    expect(dial.querySelector("strong")).toBeNull()
+    expect(dial).not.toHaveTextContent("BPM")
+    expect(screen.getByRole("dialog")).not.toHaveTextContent("1% – 200%")
+    expect(screen.getByRole("dialog")).not.toHaveTextContent(
+      "Changes apply automatically",
+    )
+    expect(screen.getAllByRole("button")).toHaveLength(2)
+    expect(
+      screen.getByRole("button", { name: "Close" }).querySelector("svg"),
+    ).not.toBeNull()
   })
 
   it("links percentage and BPM and automatically applies after 500ms", () => {

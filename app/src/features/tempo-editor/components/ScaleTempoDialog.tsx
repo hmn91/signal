@@ -2,21 +2,52 @@ import styled from "@emotion/styled"
 import {
   Button,
   Dialog,
-  DialogActions,
   DialogContent,
-  DialogDescription,
   DialogTitle,
+  IconButton,
   TextField,
 } from "@signal-app/ui"
+import CloseIcon from "mdi-react/CloseIcon"
 import { useEffect, useId, useRef, useState } from "react"
-import { Localized } from "../../../localize/useLocalization"
+import { Localized, useLocalization } from "../../../localize/useLocalization"
 import { TempoDial } from "./TempoDial"
 
 const Controls = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-top: 1rem;
+`
+
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+`
+
+const CloseButton = styled(IconButton)`
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  &:focus-visible { outline: 2px solid var(--color-theme); }
+`
+
+const OriginalRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  strong { color: var(--color-text); font-variant-numeric: tabular-nums; }
+`
+
+const ResetButton = styled(Button)`
+  height: 2.75rem;
+  flex-shrink: 0;
+  border: 1px solid var(--color-divider);
 `
 
 const Fields = styled.div`
@@ -33,6 +64,8 @@ const Fields = styled.div`
 
   input {
     width: 100%;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
   }
 `
 
@@ -52,6 +85,7 @@ export function ScaleTempoDialog({
   onClose: () => void
 }) {
   const id = useId()
+  const localized = useLocalization()
   // Keep the entered field as text so clearing and typing decimals works.
   const [input, setInput] = useState({
     mode: "percent",
@@ -65,6 +99,10 @@ export function ScaleTempoDialog({
   const changeInput = (mode: string, value: string) => {
     setInput({ mode, value })
     setEditVersion((version) => version + 1)
+  }
+  const holdPointer = (pointerId: number) => {
+    activePointers.current.add(pointerId)
+    setIsPointerDown(true)
   }
 
   useEffect(() => {
@@ -109,41 +147,31 @@ export function ScaleTempoDialog({
     <Dialog
       open
       onOpenChange={(open) => !open && onClose()}
+      aria-describedby={undefined}
       style={{
         width: "min(26rem, calc(100vw - 2rem))",
         boxSizing: "border-box",
       }}
     >
-      <DialogTitle>
-        <Localized name="scale-song-tempo" />
-      </DialogTitle>
-      <DialogContent>
-        <DialogDescription>
-          <Localized name="scale-song-tempo-description" />
-        </DialogDescription>
-        <Controls
-          onPointerDownCapture={(e) => {
-            activePointers.current.add(e.pointerId)
-            setIsPointerDown(true)
-          }}
-        >
-          <div>
-            <Localized name="tempo-at-selected-position" />:{" "}
-            {referenceBpm.toFixed(2)} BPM
-          </div>
-          <TempoDial
-            percent={percent}
-            bpm={bpm}
-            onChange={(percent) => changeInput("percent", formatValue(percent))}
-          />
-          <div
-            style={{
-              textAlign: "center",
-              color: "var(--color-text-secondary)",
-            }}
-          >
-            <Localized name="tempo-dial-help" />
-          </div>
+      <Header onPointerDownCapture={(e) => holdPointer(e.pointerId)}>
+        <DialogTitle style={{ margin: 0 }}>
+          <Localized name="scale-song-tempo" />
+        </DialogTitle>
+        <CloseButton aria-label={localized.close} onClick={onClose}>
+          <CloseIcon size={22} aria-hidden="true" />
+        </CloseButton>
+      </Header>
+      <DialogContent style={{ marginBottom: 0, minHeight: 0 }}>
+        <Controls onPointerDownCapture={(e) => holdPointer(e.pointerId)}>
+          <OriginalRow>
+            <span id={`${id}-original`}>
+              <Localized name="tempo-at-selected-position" />:{" "}
+              <strong>{referenceBpm.toFixed(2)}</strong>
+            </span>
+            <ResetButton onClick={() => changeInput("percent", "100")}>
+              <Localized name="reset" />
+            </ResetButton>
+          </OriginalRow>
           <Fields>
             <label htmlFor={`${id}-percent`}>
               <span>
@@ -165,7 +193,7 @@ export function ScaleTempoDialog({
                 }
                 onChange={(e) => changeInput("percent", e.target.value)}
                 aria-invalid={!valid}
-                aria-describedby={`${id}-limits`}
+                aria-describedby={`${id}-original`}
               />
             </label>
             <label htmlFor={`${id}-bpm`}>
@@ -186,13 +214,15 @@ export function ScaleTempoDialog({
                 }
                 onChange={(e) => changeInput("bpm", e.target.value)}
                 aria-invalid={!valid}
-                aria-describedby={`${id}-limits`}
+                aria-describedby={`${id}-original`}
               />
             </label>
           </Fields>
-          <div id={`${id}-limits`}>
-            1% – 200% · 100% = {referenceBpm.toFixed(2)} BPM
-          </div>
+          <TempoDial
+            percent={percent}
+            bpm={bpm}
+            onChange={(percent) => changeInput("percent", formatValue(percent))}
+          />
           {valid && (minimumBpm * percent) / 100 < 60000000 / 0xffffff && (
             <output>
               <Localized name="tempo-midi-limit" />
@@ -200,19 +230,6 @@ export function ScaleTempoDialog({
           )}
         </Controls>
       </DialogContent>
-      <DialogActions
-        onPointerDownCapture={(e) => {
-          activePointers.current.add(e.pointerId)
-          setIsPointerDown(true)
-        }}
-      >
-        <Button onClick={() => changeInput("percent", "100")}>
-          <Localized name="reset" />
-        </Button>
-        <Button onClick={onClose}>
-          <Localized name="close" />
-        </Button>
-      </DialogActions>
     </Dialog>
   )
 }
