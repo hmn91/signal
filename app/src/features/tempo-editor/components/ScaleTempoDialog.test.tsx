@@ -91,7 +91,7 @@ describe("ScaleTempoDialog", () => {
     expect(screen.getByRole("dialog")).not.toHaveTextContent(
       "Changes apply automatically",
     )
-    expect(screen.getAllByRole("button")).toHaveLength(2)
+    expect(screen.getAllByRole("button")).toHaveLength(6)
     expect(
       screen.getByRole("button", { name: "Close" }).querySelector("svg"),
     ).not.toBeNull()
@@ -116,6 +116,89 @@ describe("ScaleTempoDialog", () => {
     expect(onClose).not.toHaveBeenCalled()
     expect(screen.getByRole("dialog")).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "OK" })).not.toBeInTheDocument()
+  })
+
+  it("steps percentage and BPM without typing, with linked values and automatic apply", () => {
+    const { onApply } = setup()
+    fireEvent.click(screen.getByRole("button", { name: "Increase %" }))
+    expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(101)
+    expect(screen.getByLabelText("BPM")).toHaveValue(121.2)
+    advance(500)
+    expect(onApply).toHaveBeenCalledExactlyOnceWith(101)
+    fireEvent.click(screen.getByRole("button", { name: "Decrease %" }))
+    expect(screen.getByLabelText("BPM")).toHaveValue(120)
+    fireEvent.click(screen.getByRole("button", { name: "Increase BPM" }))
+    expect(screen.getByLabelText("BPM")).toHaveValue(121)
+    expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(100.8333)
+    fireEvent.click(screen.getByRole("button", { name: "Decrease BPM" }))
+    expect(screen.getByLabelText("BPM")).toHaveValue(120)
+    advance(500)
+    expect(onApply).toHaveBeenLastCalledWith(100)
+    expect(onApply).toHaveBeenCalledTimes(2)
+  })
+
+  it("bounds step buttons and disables them at the minimum and maximum", () => {
+    setup()
+    fireEvent.change(screen.getByLabelText("Tempo scale (%)"), {
+      target: { value: "199.5" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Increase %" }))
+    expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(200)
+    expect(screen.getByRole("button", { name: "Increase %" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Increase BPM" })).toBeDisabled()
+    fireEvent.change(screen.getByLabelText("BPM"), { target: { value: "1.3" } })
+    fireEvent.click(screen.getByRole("button", { name: "Decrease BPM" }))
+    expect(screen.getByLabelText("BPM")).toHaveValue(1.2)
+    expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(1)
+    expect(screen.getByRole("button", { name: "Decrease %" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Decrease BPM" })).toBeDisabled()
+  })
+
+  it("waits for touch release on the step buttons before applying", () => {
+    const { onApply } = setup()
+    const increase = screen.getByRole("button", { name: "Increase %" })
+    fireEvent.pointerDown(increase, {
+      pointerId: 8,
+      pointerType: "touch",
+      isPrimary: true,
+      button: 0,
+    })
+    fireEvent.click(increase)
+    advance(1000)
+    expect(onApply).not.toHaveBeenCalled()
+    fireEvent.pointerUp(window, { pointerId: 8 })
+    advance(499)
+    expect(onApply).not.toHaveBeenCalled()
+    advance(1)
+    expect(onApply).toHaveBeenCalledExactlyOnceWith(101)
+  })
+
+  it("keeps a fractional BPM minimum exact when decrementing", () => {
+    const onApply = vi.fn()
+    render(
+      <ScaleTempoDialog
+        referenceBpm={123.4567}
+        initialPercent={1.1}
+        onApply={onApply}
+        onClose={vi.fn()}
+      />,
+    )
+    fireEvent.click(screen.getByRole("button", { name: "Decrease BPM" }))
+    expect(screen.getByLabelText("BPM")).toHaveValue(1.234567)
+    expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(1)
+    expect(screen.getByRole("button", { name: "Decrease BPM" })).toBeDisabled()
+    advance(500)
+    expect(onApply).toHaveBeenCalledExactlyOnceWith(1)
+  })
+
+  it("can recover an empty input with a step button", () => {
+    setup()
+    fireEvent.change(screen.getByLabelText("Tempo scale (%)"), {
+      target: { value: "" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Increase %" }))
+    expect(screen.getByLabelText("Tempo scale (%)")).toHaveValue(101)
+    expect(screen.getByLabelText("BPM")).toHaveValue(121.2)
   })
 
   it("updates BPM while dragging and wheeling with limits at 1 and 200 percent", () => {

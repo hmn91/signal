@@ -5,12 +5,12 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  TextField,
 } from "@signal-app/ui"
 import CloseIcon from "mdi-react/CloseIcon"
 import { useEffect, useId, useRef, useState } from "react"
 import { Localized, useLocalization } from "../../../localize/useLocalization"
 import { TempoDial } from "./TempoDial"
+import { TempoValueInput } from "./TempoValueInput"
 
 const Controls = styled.div`
   display: flex;
@@ -52,20 +52,17 @@ const ResetButton = styled(Button)`
 
 const Fields = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
+  @media (max-width: 360px) { flex-direction: column; }
+`
 
+const Field = styled.div`
+  flex: 1;
+  min-width: 0;
   label {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 0;
-  }
-
-  input {
-    width: 100%;
-    font-variant-numeric: tabular-nums;
-    text-align: center;
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
   }
 `
 
@@ -173,17 +170,17 @@ export function ScaleTempoDialog({
             </ResetButton>
           </OriginalRow>
           <Fields>
-            <label htmlFor={`${id}-percent`}>
-              <span>
+            <Field>
+              <label htmlFor={`${id}-percent`}>
                 <Localized name="tempo-percentage" /> (%)
-              </span>
-              <TextField
+              </label>
+              <TempoValueInput
                 id={`${id}-percent`}
-                type="number"
                 min={1}
                 max={200}
-                step="any"
-                inputMode="decimal"
+                fallback={100}
+                numericValue={percent}
+                unit="%"
                 value={
                   input.mode === "percent"
                     ? input.value
@@ -191,20 +188,20 @@ export function ScaleTempoDialog({
                       ? formatValue(percent)
                       : ""
                 }
-                onChange={(e) => changeInput("percent", e.target.value)}
+                onChange={(value) => changeInput("percent", value)}
                 aria-invalid={!valid}
                 aria-describedby={`${id}-original`}
               />
-            </label>
-            <label htmlFor={`${id}-bpm`}>
-              <span>BPM</span>
-              <TextField
+            </Field>
+            <Field>
+              <label htmlFor={`${id}-bpm`}>BPM</label>
+              <TempoValueInput
                 id={`${id}-bpm`}
-                inputMode="decimal"
-                type="number"
                 min={referenceBpm / 100}
                 max={referenceBpm * 2}
-                step="any"
+                fallback={referenceBpm}
+                numericValue={bpm}
+                unit="BPM"
                 value={
                   input.mode === "bpm"
                     ? input.value
@@ -212,11 +209,11 @@ export function ScaleTempoDialog({
                       ? formatValue(bpm)
                       : ""
                 }
-                onChange={(e) => changeInput("bpm", e.target.value)}
+                onChange={(value) => changeInput("bpm", value)}
                 aria-invalid={!valid}
                 aria-describedby={`${id}-original`}
               />
-            </label>
+            </Field>
           </Fields>
           <TempoDial
             percent={percent}

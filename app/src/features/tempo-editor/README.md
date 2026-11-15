@@ -21,3 +21,5 @@ Edit the song's tempo as a graph over time.
 - Scrolling, quantization, and beat display are shared with other timeline features.
 
 The compact dialog orders its controls as Original BPM with Reset, linked percentage/BPM inputs, then a graduated rotary knob without a centre readout. A close icon sits beside the title; explanatory paragraphs and footer buttons are omitted.
+
+Each editable value has accessible minus/plus buttons: one percentage point per tap for %, one BPM per tap for BPM, clamped to the 1–200% range. The same 500 ms release/debounce rule applies.
