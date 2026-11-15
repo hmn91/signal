@@ -118,6 +118,27 @@ export const createOrUpdateItem = (
 
 type TempoPoint = { tick: number; bpm: number }
 
+// Scale the whole tempo map, including MIDI's implicit 120 BPM before the
+// first event. Event positions and IDs stay intact so rit/accel timing survives.
+export const scaleAllTempos =
+  (percent: number): TempoEditorMutator<void> =>
+  (editor) => {
+    if (!Number.isFinite(percent) || percent < 1 || percent > 200) {
+      throw new RangeError("Tempo percentage must be between 1 and 200")
+    }
+    if (percent === 100) {
+      return
+    }
+    const items = editor.getItems()
+    const ratio = percent / 100
+    items.forEach((item) =>
+      editor.updateItem({ ...item, bpm: item.bpm * ratio }),
+    )
+    if (!items.some((item) => item.tick === 0)) {
+      editor.addItem({ tick: 0, bpm: 120 * ratio })
+    }
+  }
+
 export const updateItemsInRange =
   (
     from: TempoPoint,

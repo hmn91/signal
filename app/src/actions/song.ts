@@ -17,6 +17,7 @@ import { usePlayer } from "../hooks/usePlayer"
 import { useSong } from "../hooks/useSong"
 import { useTrackMute } from "../hooks/useTrackMute"
 import { downloadSongAsMidi } from "../midi/downloadSongAsMidi"
+import { getTempoBaseline } from "../services/TempoBaseline"
 import { songFromFile } from "./file"
 
 const openSongFile = async (input: HTMLInputElement): Promise<Song | null> => {
@@ -46,6 +47,7 @@ export const useSetSong = () => {
 
   return useCallback(
     (newSong: Song) => {
+      getTempoBaseline(newSong)
       setSong(newSong)
       resetTrackMute()
 
@@ -103,9 +105,9 @@ export const useSaveSong = () => {
   const { onUserExplicitAction } = useAutoSave()
 
   return useCallback(() => {
+    downloadSongAsMidi(getSong())
     setSaved(true)
     onUserExplicitAction()
-    downloadSongAsMidi(getSong())
   }, [setSaved, onUserExplicitAction, getSong])
 }
 

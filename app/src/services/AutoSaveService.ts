@@ -4,7 +4,9 @@ import {
   songFromMidi,
   songToMidi,
 } from "@signal-app/core"
+import type { TempoSnapshot } from "@signal-app/tempo-editor"
 import { base64ToUint8Array, uint8ArrayToBase64 } from "../helpers/base64"
+import { commitTempoBaseline, getTempoBaseline } from "./TempoBaseline"
 
 const AUTO_SAVE_KEY = "signal_autosave"
 const AUTO_SAVE_FLAG_KEY = "signal_autosave_flag"
@@ -13,6 +15,7 @@ const AUTO_SAVE_INTERVAL = 10000 // auto save every 10 seconds
 export interface AutoSaveData {
   midiData: string // base64 encoded MIDI binary data
   timestamp: number
+  tempoBaseline?: TempoSnapshot
 }
 
 export class AutoSaveService {
@@ -63,6 +66,7 @@ export class AutoSaveService {
       const autoSaveData: AutoSaveData = {
         midiData: base64Data,
         timestamp: Date.now(),
+        tempoBaseline: getTempoBaseline(song),
       }
       localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(autoSaveData))
       console.debug("Auto saved song")
@@ -92,6 +96,9 @@ export class AutoSaveService {
       const autoSaveData: AutoSaveData = JSON.parse(data)
       const midiBytes = base64ToUint8Array(autoSaveData.midiData)
       const song = songFromMidi(midiBytes)
+      if (autoSaveData.tempoBaseline) {
+        commitTempoBaseline(song, autoSaveData.tempoBaseline)
+      }
       return song
     } catch (error) {
       console.warn("Failed to restore auto saved song:", error)

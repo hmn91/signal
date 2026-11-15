@@ -6,6 +6,7 @@ import {
   pasteItemsAtPosition,
   removeItems,
   removeRedundantItems,
+  scaleAllTempos,
   setBpm,
   type TempoEditorMutator,
   updateItemsInRange,
@@ -16,6 +17,7 @@ import {
   getItemsClipboardData,
   type TempoEditorQuery,
 } from "./queries"
+import type { TempoSnapshot } from "./TempoSnapshot"
 import { TrackTempoEditor } from "./TrackTempoEditor"
 
 export const createTempoEditor = (conductorTrack: Track) => {
@@ -43,6 +45,7 @@ export const createTempoEditor = (conductorTrack: Track) => {
     // queries
 
     listItems: editor.getItems,
+    getTempoSnapshot: editor.getTempoSnapshot,
     getItemsByIds: bindQuery(getItemsByIds),
     getEventIdsInRange: bindQuery(getEventIdsInRange),
     getItemsClipboardData: bindQuery(getItemsClipboardData),
@@ -57,5 +60,10 @@ export const createTempoEditor = (conductorTrack: Track) => {
     createOrUpdateItem: bindMutation(createOrUpdateItem),
     updateItemsInRange: bindMutation(updateItemsInRange),
     setBpm: bindMutation(setBpm),
+    scaleAllTempos: bindMutation(scaleAllTempos),
+    applyTempoSnapshot: (snapshot: TempoSnapshot, percent: number) =>
+      conductorTrack.transaction(() =>
+        editor.applyTempoSnapshot(snapshot, percent),
+      ),
   }
 }

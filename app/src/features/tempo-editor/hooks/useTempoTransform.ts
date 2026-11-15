@@ -3,6 +3,7 @@ import { atom, useAtomValue, useSetAtom } from "jotai"
 import { useCallback, useMemo } from "react"
 import { TempoCoordTransform } from "../entities/TempoCoordTransform"
 import { useTempoTickScroll } from "./useTempoEditor"
+import { useTempoItems } from "./useTempoItems"
 
 export function useTempoTransform() {
   return {
@@ -10,9 +11,14 @@ export function useTempoTransform() {
       // WANTFIX: Use derived atom to create TempoCoordTransform
       const { transform: tickTransform } = useTempoTickScroll()
       const canvasHeight = useAtomValue(canvasHeightAtom)
+      const items = useTempoItems()
+      const maxBPM = items.reduce(
+        (max, item) => Math.max(max, Math.ceil(item.bpm / 40) * 40),
+        320,
+      )
       return useMemo(
-        () => new TempoCoordTransform(tickTransform, canvasHeight),
-        [tickTransform, canvasHeight],
+        () => new TempoCoordTransform(tickTransform, canvasHeight, maxBPM),
+        [tickTransform, canvasHeight, maxBPM],
       )
     },
     // convert mouse position to the local coordinate on the canvas

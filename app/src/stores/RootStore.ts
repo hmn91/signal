@@ -11,6 +11,7 @@ import { AutoSaveService } from "../services/AutoSaveService"
 import { GroupOutput } from "../services/GroupOutput"
 import { MIDIMonitor } from "../services/MIDIMonitor"
 import { MIDIRecorder } from "../services/MIDIRecorder"
+import { getTempoBaseline } from "../services/TempoBaseline"
 import { registerReactions } from "./reactions"
 
 export default class RootStore {
@@ -27,6 +28,7 @@ export default class RootStore {
   readonly autoSaveService: AutoSaveService
 
   constructor() {
+    getTempoBaseline(this.songStore.song)
     const context = new (window.AudioContext || window.webkitAudioContext)()
     this.synth = new SoundFontSynth(context)
     this.metronomeSynth = new SoundFontSynth(context)
