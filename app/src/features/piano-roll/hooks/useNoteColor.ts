@@ -2,19 +2,15 @@ import { useTheme } from "@emotion/react"
 import { trackColorToCSSColor } from "@signal-app/core"
 import Color from "color"
 import { colorToVec4, enhanceContrast } from "../../../gl/color"
-import { useTrack } from "../../../hooks/useTrack"
+import { useTrackColor } from "../../../hooks/useTrackColor"
 import { usePianoRoll } from "./usePianoRoll"
 
 export function useNoteColor() {
   const { selectedTrackId } = usePianoRoll()
-  const { color: trackColor } = useTrack(selectedTrackId)
+  const trackColor = useTrackColor(selectedTrackId)
   const theme = useTheme()
 
-  const baseColor = Color(
-    trackColor !== undefined
-      ? trackColorToCSSColor(trackColor)
-      : theme.themeColor,
-  )
+  const baseColor = Color(trackColorToCSSColor(trackColor))
 
   return {
     baseColor, // for LegacyNotes

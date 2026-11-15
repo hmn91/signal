@@ -5,6 +5,7 @@ import type { Point } from "@signal-app/geometry"
 import { type MouseEventHandler, useCallback, useMemo } from "react"
 import { Beats } from "../../../../components/GLNodes/Beats"
 import { Cursor } from "../../../../components/GLNodes/Cursor"
+import type { ValueRange } from "../../../../helpers/fitView"
 import { matrixFromTranslation } from "../../../../helpers/matrix"
 import { useBeats } from "../../../../hooks/useBeats"
 import { useContextMenu } from "../../../../hooks/useContextMenu"
@@ -25,6 +26,7 @@ export interface LineGraphCanvasProps {
   width: number
   height: number
   maxValue: number
+  displayRange?: ValueRange | undefined
   lineWidth?: number
   circleRadius?: number
 }
@@ -33,6 +35,7 @@ export const LineGraphCanvas = ({
   width,
   height,
   maxValue,
+  displayRange,
   lineWidth = 2,
   circleRadius = 4,
 }: LineGraphCanvasProps) => {
@@ -61,8 +64,15 @@ export const LineGraphCanvas = ({
   }, [mouseMode, controlPencilMode])
 
   const controlTransform = useMemo(
-    () => new ControlCoordTransform(tickTransform, maxValue, height, lineWidth),
-    [tickTransform, maxValue, height, lineWidth],
+    () =>
+      new ControlCoordTransform(
+        tickTransform,
+        maxValue,
+        height,
+        lineWidth,
+        displayRange,
+      ),
+    [tickTransform, maxValue, height, lineWidth, displayRange],
   )
 
   const items = events.map((e) => ({

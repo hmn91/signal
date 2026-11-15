@@ -168,6 +168,20 @@ export class Song {
     this.tracks = tracks
   }
 
+  // Apply a complete permutation atomically; reject stale or incomplete drafts.
+  reorderTracks(ids: readonly TrackId[]) {
+    const byId = new Map(this.tracks.map((track) => [track.id, track]))
+    if (
+      ids.length !== this.tracks.length ||
+      new Set(ids).size !== ids.length ||
+      ids.some((id) => !byId.has(id)) ||
+      ids.every((id, index) => this.tracks[index].id === id)
+    ) {
+      return
+    }
+    this.tracks = ids.map((id) => byId.get(id) as Track)
+  }
+
   addNewTrack() {
     this.addTrack(emptyTrack(this.nextChannel()))
   }

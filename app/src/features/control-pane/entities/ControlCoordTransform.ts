@@ -1,5 +1,6 @@
 import type { Point, Rect } from "@signal-app/geometry"
 import type { TickTransform } from "../../../entities/transform/TickTransform"
+import type { ValueRange } from "../../../helpers/fitView"
 import type { ItemValue } from "../components/LineGraph/LineGraph"
 import type { ControlSelection } from "./ControlSelection"
 
@@ -9,6 +10,7 @@ export class ControlCoordTransform {
     readonly maxValue: number,
     readonly height: number,
     readonly lineWidth: number,
+    readonly displayRange: ValueRange = { min: 0, max: maxValue },
   ) {}
 
   getX(tick: number) {
@@ -21,15 +23,25 @@ export class ControlCoordTransform {
 
   getY(value: number) {
     return (
-      (1 - value / this.maxValue) * (this.height - this.lineWidth * 2) +
+      (1 -
+        (value - this.displayRange.min) /
+          (this.displayRange.max - this.displayRange.min)) *
+        (this.height - this.lineWidth * 2) +
       this.lineWidth
     )
   }
 
   getValue(y: number) {
-    return Math.floor(
-      (1 - (y - this.lineWidth) / (this.height - this.lineWidth * 2)) *
+    return Math.max(
+      0,
+      Math.min(
         this.maxValue,
+        Math.floor(
+          this.displayRange.min +
+            (1 - (y - this.lineWidth) / (this.height - this.lineWidth * 2)) *
+              (this.displayRange.max - this.displayRange.min),
+        ),
+      ),
     )
   }
 

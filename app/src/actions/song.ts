@@ -37,6 +37,7 @@ export const useSetSong = () => {
   const { setOpen: setShowTrackList } = useTrackList()
   const {
     setNotGhostTrackIds,
+    setHiddenTrackIds,
     setSelection,
     setSelectedNoteIds,
     setSelectedTrackId,
@@ -53,6 +54,7 @@ export const useSetSong = () => {
 
       setScrollLeftInPixels(0)
       setNotGhostTrackIds(new Set())
+      setHiddenTrackIds(new Set())
       setShowTrackList(true)
       setSelection(null)
       setSelectedNoteIds([])
@@ -79,6 +81,7 @@ export const useSetSong = () => {
       setPosition,
       setLoop,
       setNotGhostTrackIds,
+      setHiddenTrackIds,
       setScrollLeftInPixels,
       setShowTrackList,
       setSelection,

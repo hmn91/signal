@@ -1,5 +1,6 @@
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
+import { trackColorToCSSColor } from "@signal-app/core"
 import { Point } from "@signal-app/geometry"
 import Color from "color"
 import React, { type FC, useCallback, useMemo } from "react"
@@ -9,9 +10,12 @@ import { KeySignature } from "../../../entities/scale/KeySignature"
 import { noteNameWithOctString } from "../../../helpers/noteNumberString"
 import { observeDrag2 } from "../../../helpers/observeDrag"
 import { useContextMenu } from "../../../hooks/useContextMenu"
+import { useTrackColor } from "../../../hooks/useTrackColor"
 import type { Theme } from "../../../theme/Theme"
 import { useKeyScroll } from "../hooks/useKeyScroll"
 import { usePianoKeys } from "../hooks/usePianoKeys"
+import { usePianoRoll } from "../hooks/usePianoRoll"
+import { usePlaybackKeyColors } from "../hooks/usePlaybackKeyColors"
 import { PianoKeysContextMenu } from "./menus/PianoKeysContextMenu"
 
 // 0: white, 1: black
@@ -48,14 +52,11 @@ function drawWhiteKey(
   width: number,
   height: number,
   theme: Theme,
-  isSelected: boolean,
+  colors: readonly string[],
   isInScale: boolean,
   bordered: boolean,
 ): void {
-  if (isSelected) {
-    ctx.fillStyle = theme.themeColor
-    ctx.fillRect(0, 0.5, width, height)
-  }
+  drawPressedKey(ctx, width, height, colors)
   if (isInScale) {
     ctx.fillStyle = theme.themeColor
     ctx.fillRect(width - 4, 0.5, 4, height)
@@ -74,11 +75,13 @@ function drawBlackKey(
   isInScale: boolean,
   fillStyle: CanvasFillStrokeStyles["fillStyle"],
   dividerColor: string,
+  colors: readonly string[],
 ): void {
   const middle = Math.round(height / 2)
 
   ctx.fillStyle = fillStyle
   ctx.fillRect(0, 0.5, keyWidth, height)
+  drawPressedKey(ctx, keyWidth, height, colors)
 
   if (isInScale) {
     ctx.fillStyle = theme.themeColor
@@ -92,6 +95,24 @@ function drawBlackKey(
   ctx.lineTo(width, middle)
   ctx.closePath()
   ctx.stroke()
+}
+
+function drawPressedKey(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  colors: readonly string[],
+) {
+  // Keep every track visible when several tracks press the same piano key.
+  colors.forEach((color, index) => {
+    ctx.fillStyle = color
+    ctx.fillRect(
+      (index * width) / colors.length,
+      0.5,
+      width / colors.length,
+      height,
+    )
+  })
 }
 
 function drawLabel(
@@ -119,6 +140,8 @@ function drawKeys(
   theme: Theme,
   selectedKeys: Set<number>,
   scale: number[],
+  playingKeyColors: ReadonlyMap<number, readonly string[]>,
+  previewColor: string,
 ) {
   ctx.save()
   ctx.translate(0, 0.5)
@@ -129,13 +152,18 @@ function drawKeys(
   const allKeys = [...Array(numberOfKeys).keys()]
   const whiteKeys = allKeys.filter((i) => Colors[i % Colors.length] === 0)
   const blackKeys = allKeys.filter((i) => Colors[i % Colors.length] === 1)
+  const colorsForKey = (keyNum: number) => {
+    const colors = playingKeyColors.get(keyNum) ?? []
+    return selectedKeys.has(keyNum) && !colors.includes(previewColor)
+      ? [...colors, previewColor]
+      : colors
+  }
 
   drawBorder(ctx, width, theme.dividerColor)
 
   // Draw white keys
   for (const keyNum of whiteKeys) {
     let y = (numberOfKeys - keyNum - 1) * keyHeight
-    const isSelected = selectedKeys.has(keyNum)
     const isInScale = scale.includes(keyNum % 12)
 
     const bordered = keyNum % 12 === 4 || keyNum % 12 === 11
@@ -154,7 +182,15 @@ function drawKeys(
     ctx.save()
     ctx.translate(0, y)
 
-    drawWhiteKey(ctx, width, height, theme, isSelected, isInScale, bordered)
+    drawWhiteKey(
+      ctx,
+      width,
+      height,
+      theme,
+      colorsForKey(keyNum),
+      isInScale,
+      bordered,
+    )
     ctx.restore()
   }
 
@@ -164,7 +200,6 @@ function drawKeys(
   // Draw black keys
   for (const keyNum of blackKeys) {
     const y = (numberOfKeys - keyNum - 1) * keyHeight
-    const isSelected = selectedKeys.has(keyNum)
     const isInScale = scale.includes(keyNum % 12)
 
     ctx.save()
@@ -177,8 +212,9 @@ function drawKeys(
       keyHeight,
       theme,
       isInScale,
-      isSelected ? theme.themeColor : blackKeyFillStyle,
+      blackKeyFillStyle,
       grayDividerColor,
+      colorsForKey(keyNum),
     )
     ctx.restore()
   }
@@ -274,6 +310,9 @@ const PianoKeysCanvas: FC<{ style: React.CSSProperties }> = ({ style }) => {
   const theme = useTheme()
   const blackKeyWidth = Layout.keyWidth * Layout.blackKeyWidthRatio
   const { keySignature, keyHeight, numberOfKeys, selectedKeys } = usePianoKeys()
+  const playingKeyColors = usePlaybackKeyColors()
+  const { selectedTrackId } = usePianoRoll()
+  const previewColor = trackColorToCSSColor(useTrackColor(selectedTrackId))
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D) => {
@@ -288,13 +327,25 @@ const PianoKeysCanvas: FC<{ style: React.CSSProperties }> = ({ style }) => {
         theme,
         selectedKeys,
         scale,
+        playingKeyColors,
+        previewColor,
       )
     },
-    [numberOfKeys, theme, selectedKeys, keySignature, keyHeight, blackKeyWidth],
+    [
+      numberOfKeys,
+      theme,
+      selectedKeys,
+      keySignature,
+      keyHeight,
+      blackKeyWidth,
+      playingKeyColors,
+      previewColor,
+    ],
   )
 
   return (
     <DrawCanvas
+      data-piano-keys="true"
       draw={draw}
       width={Layout.keyWidth}
       height={keyHeight * numberOfKeys}

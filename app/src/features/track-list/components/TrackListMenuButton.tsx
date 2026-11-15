@@ -39,6 +39,8 @@ export const TrackListMenuButton: FC = () => {
   return (
     <>
       <NavBackButton
+        aria-label="Toggle track list"
+        aria-expanded={isOpen}
         ref={ref}
         tabIndex={-1}
         onMouseDown={(e) => {

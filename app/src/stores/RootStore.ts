@@ -11,6 +11,7 @@ import { AutoSaveService } from "../services/AutoSaveService"
 import { GroupOutput } from "../services/GroupOutput"
 import { MIDIMonitor } from "../services/MIDIMonitor"
 import { MIDIRecorder } from "../services/MIDIRecorder"
+import { PlaybackNotes } from "../services/PlaybackNotes"
 import { getTempoBaseline } from "../services/TempoBaseline"
 import { registerReactions } from "./reactions"
 
@@ -18,6 +19,7 @@ export default class RootStore {
   readonly songStore = new SongStore()
   readonly midiDeviceStore: MIDIDeviceStore
   readonly player: Player
+  readonly playbackNotes: PlaybackNotes
   readonly synth: SoundFontSynth
   readonly metronomeSynth: SoundFontSynth
   readonly synthGroup: GroupOutput
@@ -36,7 +38,12 @@ export default class RootStore {
     this.synthGroup.outputs.push({ synth: this.synth, isEnabled: true })
 
     const eventSource = new EventSource(this.songStore)
-    this.player = new Player(this.synthGroup, eventSource)
+    this.playbackNotes = new PlaybackNotes(this.synthGroup)
+    this.player = new Player(this.playbackNotes, eventSource)
+    this.player.onIsPlayingChanged.subscribe(() => {
+      this.playbackNotes.setPlaying(this.player.isPlaying)
+    })
+    this.songStore.onSongChanged.subscribe(() => this.playbackNotes.clear())
 
     this.midiDeviceStore = new MIDIDeviceStore()
     this.midiInput = new MIDIInput(this.midiDeviceStore)

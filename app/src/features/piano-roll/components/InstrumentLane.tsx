@@ -3,6 +3,7 @@ import { Positioned } from "@signal-app/ui"
 import { type FC, useMemo } from "react"
 import { useTickScroll } from "../../../hooks/useTickScroll"
 import { useProgramChangeEvents } from "../hooks/useEventView"
+import { usePianoRoll } from "../hooks/usePianoRoll"
 import { InstrumentMark } from "./InstrumentMark"
 
 export interface InstrumentLaneProps {
@@ -18,6 +19,7 @@ const Container = styled.div`
 export const InstrumentLane: FC<InstrumentLaneProps> = ({ width }) => {
   const { scrollLeft, transform } = useTickScroll()
   const programChangeEvents = useProgramChangeEvents()
+  const { isSelectedTrackHidden } = usePianoRoll()
 
   const style = useMemo(
     () => ({
@@ -25,6 +27,10 @@ export const InstrumentLane: FC<InstrumentLaneProps> = ({ width }) => {
     }),
     [width],
   )
+
+  if (isSelectedTrackHidden) {
+    return null
+  }
 
   return (
     <Container style={style}>

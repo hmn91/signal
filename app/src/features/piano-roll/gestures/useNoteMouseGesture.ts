@@ -10,7 +10,7 @@ export const useNoteMouseGesture = (): MouseDownHandler<
   [],
   React.MouseEvent
 > => {
-  const { mouseMode } = usePianoRoll()
+  const { mouseMode, isSelectedTrackHidden } = usePianoRoll()
   const pencilGesture = usePencilGesture()
   const selectionGesture = useSelectionGesture()
   const currentGesture = useMemo(() => {
@@ -46,8 +46,11 @@ export const useNoteMouseGesture = (): MouseDownHandler<
   return useCallback(
     (ev) => {
       const e = ev.nativeEvent
+      if (isSelectedTrackHidden && e.button !== 1) {
+        return
+      }
       getGestureForMouseDown(e)(e)
     },
-    [getGestureForMouseDown],
+    [getGestureForMouseDown, isSelectedTrackHidden],
   )
 }

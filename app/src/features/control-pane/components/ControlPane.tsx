@@ -6,6 +6,7 @@ import { VelocityEditorProvider } from "../context/VelocityEditorProvider"
 import { useControlPane } from "../hooks/useControlPane"
 import { useControlPaneGlobalKeyboardShortcut } from "../hooks/useControlPaneGlobalKeyboardShortcut"
 import { useControlPaneKeyboardShortcut } from "../hooks/useControlPaneKeyboardShortcut"
+import { ControlFitButtons, VelocityFitButtons } from "./ControlFitButtons"
 import { ControlLayout } from "./ControlLayout"
 import { ControlEventValueDialog } from "./dialogs/ControlEventValueDialog"
 import { ValueEventGraph } from "./Graph/ValueEventGraph"
@@ -22,6 +23,7 @@ const VelocityGraph: FC<ControlPaneProps> = ({ axisWidth }) => {
       <ControlLayout
         axisWidth={axisWidth}
         content={(props) => <PianoVelocityControl {...props} />}
+        toolbarTrailing={<VelocityFitButtons />}
       />
     </VelocityEditorProvider>
   )
@@ -44,13 +46,23 @@ const ControllerGraph: FC<ControlPaneProps & { type: ValueEventType }> = ({
       {...keyboardShortcutProps}
       axisWidth={axisWidth}
       content={(props) => <ValueEventGraph {...props} type={type} />}
-      toolbarTrailing={showPencilModeSelector && <PencilModeSelector />}
+      toolbarTrailing={
+        <>
+          {showPencilModeSelector && <PencilModeSelector />}
+          <ControlFitButtons />
+        </>
+      }
     />
   )
 }
 
 const ControlPaneWrapper: FC<ControlPaneProps> = (props) => {
   const { controlMode: mode } = useControlPane()
+  const { isSelectedTrackHidden } = usePianoRoll()
+
+  if (isSelectedTrackHidden) {
+    return <ControlLayout axisWidth={props.axisWidth} content={() => null} />
+  }
 
   switch (mode.type) {
     case "velocity":

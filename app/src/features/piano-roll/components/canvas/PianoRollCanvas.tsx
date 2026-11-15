@@ -21,6 +21,7 @@ import { GhostNotes } from "./GhostNotes"
 import { Lines } from "./Lines"
 import { NoteSelection } from "./NoteSelection"
 import { Notes } from "./Notes"
+import { OverlappingNotes } from "./OverlappingNotes"
 
 export interface PianoRollCanvasProps {
   width: number
@@ -31,7 +32,7 @@ export const PianoRollCanvas: FC<PianoRollCanvasProps> = ({
   width,
   height,
 }) => {
-  const { ghostTrackIds, mouseMode } = usePianoRoll()
+  const { ghostTrackIds, mouseMode, isSelectedTrackHidden } = usePianoRoll()
   const beats = useBeats()
   const { cursorX, setCanvasWidth, scrollLeft } = useTickScroll()
   const { scrollTop, setCanvasHeight } = useKeyScroll()
@@ -109,8 +110,9 @@ export const PianoRollCanvas: FC<PianoRollCanvasProps> = ({
           {ghostTrackIds.map((trackId) => (
             <GhostNotes key={trackId} trackId={trackId} zIndex={2} />
           ))}
-          <Notes zIndex={3} />
-          <NoteSelection zIndex={4} />
+          {!isSelectedTrackHidden && <Notes zIndex={3} />}
+          <OverlappingNotes />
+          {!isSelectedTrackHidden && <NoteSelection zIndex={4} />}
         </Transform>
       </GLCanvas>
       <PianoSelectionContextMenu {...menuProps} />

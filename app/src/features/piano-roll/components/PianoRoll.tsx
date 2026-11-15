@@ -7,6 +7,7 @@ import {
   HorizontalScaleScrollBar,
   VerticalScaleScrollBar,
 } from "../../../components/inputs/ScaleScrollBar"
+import { BAR_WIDTH } from "../../../components/inputs/ScrollBar"
 import { isTouchPadEvent } from "../../../helpers/touchpad"
 import { useTickScroll } from "../../../hooks/useTickScroll"
 import { useTrack } from "../../../hooks/useTrack"
@@ -149,7 +150,7 @@ const PianoRollWrapper: FC = () => {
           tabIndex={0}
         >
           <PianoRollStage
-            width={size.width}
+            width={Math.max(0, size.width - keyWidth - BAR_WIDTH)}
             height={alphaHeight}
             keyWidth={keyWidth}
           />

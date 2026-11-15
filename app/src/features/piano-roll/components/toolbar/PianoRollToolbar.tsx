@@ -8,6 +8,7 @@ import { TrackNameInput } from "../../../track-list/components/TrackNameInput"
 import { EventListButton } from "./EventListButton"
 import { InstrumentButton } from "./InstrumentButton"
 import { PanSlider } from "./PanSlider"
+import { PianoRollFitButtons } from "./PianoRollFitButtons"
 import { PianoRollToolSelector } from "./PianoRollToolSelector"
 import { VolumeSlider } from "./VolumeSlider"
 
@@ -21,7 +22,7 @@ const FlexibleSpacer = styled.div`
 
 export const PianoRollToolbar: FC = () => {
   return (
-    <Toolbar>
+    <Toolbar style={{ overflowX: "auto", flexShrink: 0 }}>
       <TrackListMenuButton />
 
       <TrackNameInput />
@@ -38,6 +39,7 @@ export const PianoRollToolbar: FC = () => {
       <FlexibleSpacer />
 
       <PianoRollToolSelector />
+      <PianoRollFitButtons />
 
       <QuantizeSelector />
 

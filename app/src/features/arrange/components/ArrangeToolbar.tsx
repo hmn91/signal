@@ -2,8 +2,11 @@ import styled from "@emotion/styled"
 import { Toolbar } from "@signal-app/ui"
 import type { FC } from "react"
 import { AutoScrollButton } from "../../../components/Toolbar/AutoScrollButton"
+import { FitViewButtons } from "../../../components/Toolbar/FitViewButtons"
 import { QuantizeSelector } from "../../../components/Toolbar/QuantizeSelector/QuantizeSelector"
+import { useTickScroll } from "../../../hooks/useTickScroll"
 import { Localized } from "../../../localize/useLocalization"
+import { useTrackScroll } from "../hooks/useTrackScroll"
 
 const Title = styled.div`
   font-weight: bold;
@@ -21,13 +24,19 @@ const FlexibleSpacer = styled.div`
 `
 
 export const ArrangeToolbar: FC = () => {
+  const { fitHorizontal } = useTickScroll()
+  const { fitVertical } = useTrackScroll()
   return (
-    <Toolbar>
+    <Toolbar style={{ overflowX: "auto", flexShrink: 0 }}>
       <Title>
         <Localized name="arrangement-view" />
       </Title>
 
       <FlexibleSpacer />
+      <FitViewButtons
+        onFitHorizontal={fitHorizontal}
+        onFitVertical={fitVertical}
+      />
 
       <QuantizeSelector />
 
