@@ -4,6 +4,7 @@ import type { FC } from "react"
 import { AutoScrollButton } from "../../../../components/Toolbar/AutoScrollButton"
 import { QuantizeSelector } from "../../../../components/Toolbar/QuantizeSelector/QuantizeSelector"
 import { Localized } from "../../../../localize/useLocalization"
+import { ScaleTempoButton } from "./ScaleTempoButton"
 import { TempoGraphToolSelector } from "./TempoGraphToolSelector"
 
 const Title = styled.span`
@@ -25,6 +26,8 @@ export const TempoGraphToolbar: FC = () => {
       </Title>
 
       <FlexibleSpacer />
+
+      <ScaleTempoButton />
 
       <TempoGraphToolSelector />
 

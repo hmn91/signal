@@ -40,7 +40,11 @@ export const TempoGraphAxis: FC<TempoGraphAxisProps> = ({
   return (
     <Container width={width} top={offset}>
       <Values>
-        {range(30, transform.maxBPM, 30).map((t) => {
+        {range(
+          30 * Math.ceil(transform.maxBPM / 320),
+          transform.maxBPM,
+          30 * Math.ceil(transform.maxBPM / 320),
+        ).map((t) => {
           const top = Math.round(transform.getY(t))
           return (
             <Positioned top={top} key={t}>

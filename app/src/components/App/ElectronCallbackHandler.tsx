@@ -19,6 +19,10 @@ import { useRootView } from "../../hooks/useRootView"
 import { useSong } from "../../hooks/useSong"
 import { useSongFile } from "../../hooks/useSongFile"
 import { useLocalization } from "../../localize/useLocalization"
+import {
+  captureTempoSnapshot,
+  commitTempoBaseline,
+} from "../../services/TempoBaseline"
 import { ElectronCallback } from "./ElectronCallback"
 
 export const ElectronCallbackHandler: FC = () => {
@@ -40,10 +44,13 @@ export const ElectronCallbackHandler: FC = () => {
         return // canceled
       }
       const { path } = res
-      const data = songToMidi(getSong()).buffer as ArrayBuffer
+      const song = getSong()
+      const data = songToMidi(song).buffer as ArrayBuffer
+      const tempoSnapshot = captureTempoSnapshot(song)
+      await window.electronAPI.saveFile(path, data)
+      commitTempoBaseline(song, tempoSnapshot)
       setFilepath(path)
       setSaved(true)
-      await window.electronAPI.saveFile(path, data)
       window.electronAPI.addRecentDocument(path)
     } catch (e) {
       alert((e as Error).message)
@@ -97,8 +104,11 @@ export const ElectronCallbackHandler: FC = () => {
         } else {
           try {
             if (filepath) {
-              const data = songToMidi(getSong()).buffer as ArrayBuffer
+              const song = getSong()
+              const data = songToMidi(song).buffer as ArrayBuffer
+              const tempoSnapshot = captureTempoSnapshot(song)
               await window.electronAPI.saveFile(filepath, data)
+              commitTempoBaseline(song, tempoSnapshot)
               setSaved(true)
             } else {
               await saveFileAs()

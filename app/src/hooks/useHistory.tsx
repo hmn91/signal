@@ -2,6 +2,7 @@ import { Song } from "@signal-app/core"
 import { atom, useAtomValue, useSetAtom } from "jotai"
 import { useAtomCallback } from "jotai/utils"
 import { useCallback } from "react"
+import { shareTempoBaseline } from "../services/TempoBaseline"
 import {
   type HistoryAtomsSnapshot,
   restoreHistoryAtoms,
@@ -54,14 +55,17 @@ function useSnapshot() {
 
 function useRestore() {
   const { setSong } = useSong()
+  const { songStore } = useStores()
 
   return useAtomCallback(
     useCallback(
       (_get, set, snapshot: HistorySnapshot) => {
-        setSong(Song.deserialize(snapshot.song))
+        const restoredSong = Song.deserialize(snapshot.song)
+        shareTempoBaseline(songStore.song, restoredSong)
+        setSong(restoredSong)
         restoreHistoryAtoms(set, snapshot.atoms)
       },
-      [setSong],
+      [setSong, songStore],
     ),
   )
 }

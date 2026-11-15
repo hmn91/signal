@@ -1,6 +1,11 @@
 import { type Song, songFromMidi, songToMidi } from "@signal-app/core"
 import { basename } from "../helpers/path"
 import { writeFile } from "../services/fs-helper"
+import {
+  captureTempoSnapshot,
+  commitTempoBaseline,
+  getTempoBaseline,
+} from "../services/TempoBaseline"
 import { useSetSong } from "./song"
 
 // URL parameter for automation purposes used in scripts/perf/index.js
@@ -71,6 +76,7 @@ export const songFromArrayBuffer = (
     song.filepath = filePath
   }
   song.isSaved = true
+  getTempoBaseline(song)
   return song
 }
 
@@ -82,8 +88,10 @@ export const saveFile = async (song: Song) => {
   }
 
   const data = songToMidi(song).buffer as ArrayBuffer
+  const tempoSnapshot = captureTempoSnapshot(song)
   try {
     await writeFile(fileHandle, data)
+    commitTempoBaseline(song, tempoSnapshot)
     song.isSaved = true
   } catch (e) {
     console.error(e)
@@ -116,7 +124,9 @@ export const saveFileAs = async (song: Song) => {
       return
     }
     const data = songToMidi(song).buffer as ArrayBuffer
+    const tempoSnapshot = captureTempoSnapshot(song)
     await writeFile(fileHandle, data)
+    commitTempoBaseline(song, tempoSnapshot)
     song.fileHandle = fileHandle
     song.name = getNameFromPathOrName(fileHandle.name)
     song.isSaved = true
