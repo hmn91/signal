@@ -12,6 +12,7 @@ The track list and per-track controls.
 
 - Show each track's name, instrument, and activity.
 - Mute, solo, and show a track as ghost notes.
+- The eye button toggles visualization in the piano roll, including the selected track. It does not mute, solo, edit MIDI, or mark the file as unsaved. Its pressed state reflects whether that track is currently displayed.
 - Add, reorder, rename, and remove tracks.
 
 ## Design Notes

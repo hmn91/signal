@@ -1,21 +1,10 @@
 import { isNoteEvent } from "@signal-app/core"
-import { useCallback, useMemo } from "react"
+import { useCallback } from "react"
 import { useDerivedValue } from "../../../hooks/useDerivedValue"
-import { useSong } from "../../../hooks/useSong"
-import { usePianoRoll } from "./usePianoRoll"
+import { useVisibleTracks } from "./useVisibleTracks"
 
 export function useVisibleNoteTracks() {
-  const { tracks } = useSong()
-  const { selectedTrackId, notGhostTrackIds } = usePianoRoll()
-  const visibleTracks = useMemo(
-    () =>
-      tracks.filter(
-        (track) =>
-          !track.isConductorTrack &&
-          (track.id === selectedTrackId || !notGhostTrackIds.has(track.id)),
-      ),
-    [tracks, selectedTrackId, notGhostTrackIds],
-  )
+  const visibleTracks = useVisibleTracks()
 
   return useDerivedValue(
     useCallback(

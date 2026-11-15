@@ -13,6 +13,7 @@ import { useSong } from "../../../hooks/useSong"
 import { useStores } from "../../../hooks/useStores"
 import { TickScrollProvider, useTickScroll } from "../../../hooks/useTickScroll"
 import type { Selection } from "../entities/Selection"
+import { isTrackVisible } from "../entities/trackVisibility"
 import { EventViewProvider } from "./useEventView"
 
 type PianoRollStore = {
@@ -47,6 +48,13 @@ export function usePianoRoll() {
     get notGhostTrackIds() {
       return useAtomValue(notGhostTrackIdsAtom, { store })
     },
+    get hiddenTrackIds() {
+      return useAtomValue(hiddenTrackIdsAtom, { store })
+    },
+    get isSelectedTrackHidden() {
+      const selectedTrackId = useAtomValue(selectedTrackIdAtom, { store })
+      return useAtomValue(hiddenTrackIdsAtom, { store }).has(selectedTrackId)
+    },
     get mouseMode() {
       return useAtomValue(mouseModeAtom, { store })
     },
@@ -74,16 +82,23 @@ export function usePianoRoll() {
       const { tracks } = useSong()
       const notGhostTrackIds = useAtomValue(notGhostTrackIdsAtom, { store })
       const selectedTrackId = useAtomValue(selectedTrackIdAtom, { store })
+      const hiddenTrackIds = useAtomValue(hiddenTrackIdsAtom, { store })
       const allTrackIds = useMemo(
-        () => tracks.map((track) => track.id),
+        () =>
+          tracks
+            .filter((track) => !track.isConductorTrack)
+            .map((track) => track.id),
         [tracks],
       )
       return useMemo(
         () =>
           allTrackIds.filter(
-            (id) => !notGhostTrackIds.has(id) && id !== selectedTrackId,
+            (id) =>
+              !notGhostTrackIds.has(id) &&
+              !hiddenTrackIds.has(id) &&
+              id !== selectedTrackId,
           ),
-        [allTrackIds, notGhostTrackIds, selectedTrackId],
+        [allTrackIds, notGhostTrackIds, hiddenTrackIds, selectedTrackId],
       )
     },
     get previewingNoteNumbers() {
@@ -103,6 +118,8 @@ export function usePianoRoll() {
     },
     resetSelection: useSetAtom(resetSelectionAtom, { store }),
     setNotGhostTrackIds: useSetAtom(notGhostTrackIdsAtom, { store }),
+    setHiddenTrackIds: useSetAtom(hiddenTrackIdsAtom, { store }),
+    toggleTrackVisibility: useSetAtom(toggleTrackVisibilityAtom, { store }),
     setOpenTransposeDialog: useSetAtom(openTransposeDialogAtom, { store }),
     setKeySignature: useSetAtom(keySignatureAtom, { store }),
     setMouseMode: useSetAtom(mouseModeAtom, { store }),
@@ -159,6 +176,7 @@ const selectionAtom = historyAtom(atom<Selection | null>(null))
 const selectedNoteIdsAtom = historyAtom(atom<readonly number[]>([]))
 const lastNoteDurationAtom = atom<number | null>(null)
 const notGhostTrackIdsAtom = atom<ReadonlySet<TrackId>>(new Set<TrackId>())
+const hiddenTrackIdsAtom = atom<ReadonlySet<TrackId>>(new Set<TrackId>())
 const newNoteVelocityAtom = atom<number>(100)
 const keySignatureAtom = atom<KeySignature | null>(null)
 const openTransposeDialogAtom = atom<boolean>(false)
@@ -166,6 +184,26 @@ const previewingNoteNumbersAtom = atom<ReadonlySet<number>>(new Set<number>())
 const activePaneAtom = atom<"notes" | "control" | null>(null)
 
 // actions
+const toggleTrackVisibilityAtom = atom(null, (get, set, trackId: TrackId) => {
+  const hidden = get(hiddenTrackIdsAtom)
+  if (
+    !isTrackVisible(
+      trackId,
+      get(selectedTrackIdAtom),
+      get(notGhostTrackIdsAtom),
+      hidden,
+    )
+  ) {
+    set(hiddenTrackIdsAtom, deletedSet(trackId))
+    set(notGhostTrackIdsAtom, deletedSet(trackId))
+  } else {
+    set(hiddenTrackIdsAtom, addedSet(trackId))
+    if (get(selectedTrackIdAtom) === trackId) {
+      set(selectionAtom, null)
+      set(selectedNoteIdsAtom, [])
+    }
+  }
+})
 const resetSelectionAtom = atom(null, (_get, set) => {
   set(selectionAtom, null)
   set(selectedNoteIdsAtom, [])

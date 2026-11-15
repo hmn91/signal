@@ -1,6 +1,8 @@
 import { keyframes } from "@emotion/react"
 import styled from "@emotion/styled"
 import { type TrackId, trackColorToCSSColor } from "@signal-app/core"
+import EyeIcon from "mdi-react/EyeIcon"
+import EyeOffIcon from "mdi-react/EyeOffIcon"
 import Headset from "mdi-react/HeadphonesIcon"
 import Layers from "mdi-react/LayersIcon"
 import VolumeUp from "mdi-react/VolumeHighIcon"
@@ -20,6 +22,7 @@ import { useTrack } from "../../../hooks/useTrack"
 import { useTrackColor } from "../../../hooks/useTrackColor"
 import { useTrackMute } from "../../../hooks/useTrackMute"
 import { InstrumentBrowser } from "../../instrument-browser"
+import { isTrackVisible } from "../../piano-roll/entities/trackVisibility"
 import { usePianoRoll } from "../../piano-roll/hooks/usePianoRoll"
 import { useMIDIActivity } from "../hooks/useMIDIActivity"
 import { useToggleAllGhostTracks } from "../hooks/useToggleAllGhostTracks"
@@ -178,10 +181,28 @@ const ControlButton = styled.div`
   }
 `
 
+const VisibilityButton = styled(ControlButton.withComponent("button"))`
+  background: transparent;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-theme);
+    outline-offset: 2px;
+  }
+`
+
 const _TrackListItem: FC<TrackListItemProps> = ({ trackId }) => {
-  const { selectedTrackId, notGhostTrackIds } = usePianoRoll()
+  const {
+    selectedTrackId,
+    notGhostTrackIds,
+    hiddenTrackIds,
+    toggleTrackVisibility,
+  } = usePianoRoll()
   const {
     channel,
+    name,
     isConductorTrack,
     programNumber,
     isRhythmTrack,
@@ -198,6 +219,12 @@ const _TrackListItem: FC<TrackListItemProps> = ({ trackId }) => {
 
   const selected = trackId === selectedTrackId
   const ghostTrack = !notGhostTrackIds.has(trackId)
+  const visible = isTrackVisible(
+    trackId,
+    selectedTrackId,
+    notGhostTrackIds,
+    hiddenTrackIds,
+  )
   const { onContextMenu, menuProps } = useContextMenu()
   const [isDialogOpened, setDialogOpened] = useState(false)
   const [isInstrumentBrowserOpen, setInstrumentBrowserOpen] = useState(false)
@@ -301,6 +328,23 @@ const _TrackListItem: FC<TrackListItemProps> = ({ trackId }) => {
             </Instrument>
           </Label>
           <Controls>
+            <VisibilityButton
+              type="button"
+              aria-label={`Show ${name || `Track ${Number(trackId)}`} in piano roll`}
+              aria-pressed={visible}
+              title={visible ? "Hide track" : "Show track"}
+              data-active={visible}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+              }}
+              onClick={(event) => {
+                event.stopPropagation()
+                toggleTrackVisibility(trackId)
+              }}
+            >
+              {visible ? <EyeIcon /> : <EyeOffIcon />}
+            </VisibilityButton>
             <ControlButton
               data-active={isSolo}
               onMouseDown={onClickSolo}

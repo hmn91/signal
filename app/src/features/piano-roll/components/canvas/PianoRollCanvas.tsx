@@ -32,7 +32,7 @@ export const PianoRollCanvas: FC<PianoRollCanvasProps> = ({
   width,
   height,
 }) => {
-  const { ghostTrackIds, mouseMode } = usePianoRoll()
+  const { ghostTrackIds, mouseMode, isSelectedTrackHidden } = usePianoRoll()
   const beats = useBeats()
   const { cursorX, setCanvasWidth, scrollLeft } = useTickScroll()
   const { scrollTop, setCanvasHeight } = useKeyScroll()
@@ -110,9 +110,9 @@ export const PianoRollCanvas: FC<PianoRollCanvasProps> = ({
           {ghostTrackIds.map((trackId) => (
             <GhostNotes key={trackId} trackId={trackId} zIndex={2} />
           ))}
-          <Notes zIndex={3} />
+          {!isSelectedTrackHidden && <Notes zIndex={3} />}
           <OverlappingNotes />
-          <NoteSelection zIndex={4} />
+          {!isSelectedTrackHidden && <NoteSelection zIndex={4} />}
         </Transform>
       </GLCanvas>
       <PianoSelectionContextMenu {...menuProps} />

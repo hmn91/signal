@@ -58,6 +58,11 @@ const ControllerGraph: FC<ControlPaneProps & { type: ValueEventType }> = ({
 
 const ControlPaneWrapper: FC<ControlPaneProps> = (props) => {
   const { controlMode: mode } = useControlPane()
+  const { isSelectedTrackHidden } = usePianoRoll()
+
+  if (isSelectedTrackHidden) {
+    return <ControlLayout axisWidth={props.axisWidth} content={() => null} />
+  }
 
   switch (mode.type) {
     case "velocity":
