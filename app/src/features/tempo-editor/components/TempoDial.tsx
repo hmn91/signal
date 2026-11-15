@@ -1,6 +1,7 @@
 import styled from "@emotion/styled"
 import { useRef } from "react"
 import { useLocalization } from "../../../localize/useLocalization"
+import { tempoScaleColor } from "../helpers/tempoScaleColor"
 
 const Dial = styled.div`
   position: relative;
@@ -64,6 +65,7 @@ export function TempoDial({
 }) {
   const localized = useLocalization()
   const value = Number.isFinite(percent) ? clamp(percent) : 100
+  const colour = tempoScaleColor(value)
   const drag = useRef<{
     id: number
     lastAngle: number | null
@@ -76,6 +78,7 @@ export function TempoDial({
 
   return (
     <Dial
+      style={{ color: colour }}
       role="slider"
       tabIndex={0}
       aria-label={localized["tempo-percentage"]}
@@ -172,7 +175,7 @@ export function TempoDial({
           d="M39.19 160.81 A86 86 0 1 1 160.81 160.81"
           pathLength={2}
           fill="none"
-          stroke="var(--color-theme)"
+          stroke="currentColor"
           strokeWidth={8}
           strokeLinecap="round"
           strokeDasharray={`${position + 1} 2`}
@@ -182,7 +185,7 @@ export function TempoDial({
           y1={27}
           x2={100}
           y2={43}
-          stroke="var(--color-text)"
+          stroke="currentColor"
           strokeWidth={5}
           strokeLinecap="round"
           transform={`rotate(${angle} 100 100)`}
