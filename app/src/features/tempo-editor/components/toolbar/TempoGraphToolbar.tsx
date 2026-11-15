@@ -2,8 +2,11 @@ import styled from "@emotion/styled"
 import { Toolbar } from "@signal-app/ui"
 import type { FC } from "react"
 import { AutoScrollButton } from "../../../../components/Toolbar/AutoScrollButton"
+import { FitViewButtons } from "../../../../components/Toolbar/FitViewButtons"
 import { QuantizeSelector } from "../../../../components/Toolbar/QuantizeSelector/QuantizeSelector"
+import { useTickScroll } from "../../../../hooks/useTickScroll"
 import { Localized } from "../../../../localize/useLocalization"
+import { useTempoTransform } from "../../hooks/useTempoTransform"
 import { ScaleTempoButton } from "./ScaleTempoButton"
 import { TempoGraphToolSelector } from "./TempoGraphToolSelector"
 
@@ -19,8 +22,10 @@ const FlexibleSpacer = styled.div`
 `
 
 export const TempoGraphToolbar: FC = () => {
+  const { fitHorizontal } = useTickScroll()
+  const { fitVertical } = useTempoTransform()
   return (
-    <Toolbar>
+    <Toolbar style={{ overflowX: "auto", flexShrink: 0 }}>
       <Title>
         <Localized name="tempo" />
       </Title>
@@ -30,6 +35,10 @@ export const TempoGraphToolbar: FC = () => {
       <ScaleTempoButton />
 
       <TempoGraphToolSelector />
+      <FitViewButtons
+        onFitHorizontal={fitHorizontal}
+        onFitVertical={fitVertical}
+      />
 
       <QuantizeSelector />
 

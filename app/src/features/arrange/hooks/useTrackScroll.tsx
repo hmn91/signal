@@ -74,6 +74,7 @@ export function useTrackScroll(store = useContext(TrackScrollContext)) {
     setCanvasHeight: useSetAtom(canvasHeightAtom, { store }),
     setScaleY: useSetAtom(setScaleYAtom, { store }),
     setScrollTop: useSetAtom(setScrollTopAtom, { store }),
+    fitVertical: useSetAtom(fitVerticalAtom, { store }),
   }
 }
 
@@ -103,10 +104,26 @@ const setScrollTopAtom = atom(
       Layout.rulerHeight +
       BAR_WIDTH -
       get(canvasHeightAtom)
-    set(scrollTopAtom, clamp(scrollTop, 0, maxOffset))
+    set(scrollTopAtom, clamp(scrollTop, 0, Math.max(0, maxOffset)))
   },
 )
 const setScaleYAtom = atom(null, (get, set, scaleY: number) => {
-  set(scaleYAtom, clamp(scaleY, SCALE_Y_MIN, SCALE_Y_MAX))
+  set(
+    scaleYAtom,
+    clamp(scaleY, Math.min(get(scaleYAtom), SCALE_Y_MIN), SCALE_Y_MAX),
+  )
   set(setScrollTopAtom, get(scrollTopAtom))
+})
+
+const fitVerticalAtom = atom(null, (get, set) => {
+  const height = get(canvasHeightAtom) - Layout.rulerHeight - BAR_WIDTH
+  const count = get(trackCountAtom)
+  if (height <= 0 || count === 0) {
+    return
+  }
+  set(
+    scaleYAtom,
+    Math.min(SCALE_Y_MAX, height / (count * DEFAULT_TRACK_HEIGHT)),
+  )
+  set(scrollTopAtom, 0)
 })

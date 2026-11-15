@@ -1,4 +1,5 @@
 import React from "react"
+import type { ValueRange } from "../../../../helpers/fitView"
 import { useCreateOrUpdateControlEventsValue } from "../../hooks/control"
 import { GraphAxis } from "./GraphAxis"
 import { LineGraphCanvas } from "./LineGraphCanvas"
@@ -12,6 +13,7 @@ export interface LineGraphProps {
   width: number
   height: number
   maxValue: number
+  displayRange?: ValueRange
   lineWidth?: number
   circleRadius?: number
   axis: number[]
@@ -21,6 +23,7 @@ export interface LineGraphProps {
 
 const LineGraph = ({
   maxValue,
+  displayRange,
   width,
   height,
   lineWidth = 2,
@@ -47,6 +50,7 @@ const LineGraph = ({
         width={width}
         height={height}
         maxValue={maxValue}
+        displayRange={displayRange}
         lineWidth={lineWidth}
         circleRadius={circleRadius}
       />

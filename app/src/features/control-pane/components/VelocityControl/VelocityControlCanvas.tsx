@@ -9,6 +9,7 @@ import { useTickScroll } from "../../../../hooks/useTickScroll"
 import { VelocityTransform } from "../../entities/VelocityTransform"
 import { useDragVelocityGesture } from "../../gestures/useDragVelocityGesture"
 import { useVelocityPaintGesture } from "../../gestures/useVelocityPaintGesture"
+import { useControlRange } from "../../hooks/useControlRange"
 import { VelocityItems } from "./VelocityItems"
 
 export const VelocityControlCanvas: FC<{ width: number; height: number }> = ({
@@ -18,9 +19,12 @@ export const VelocityControlCanvas: FC<{ width: number; height: number }> = ({
   const beats = useBeats()
   const { cursorX, scrollLeft } = useTickScroll()
   const theme = useTheme()
+  const {
+    range: { min, max },
+  } = useControlRange()
   const velocityTransform = useMemo(
-    () => new VelocityTransform(height),
-    [height],
+    () => new VelocityTransform(height, min, max),
+    [height, min, max],
   )
   const velocityPaintGesture = useVelocityPaintGesture(velocityTransform)
   const dragVelocityGesture = useDragVelocityGesture(velocityTransform)

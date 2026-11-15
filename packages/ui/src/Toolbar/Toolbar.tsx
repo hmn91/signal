@@ -1,7 +1,6 @@
 import styled from "@emotion/styled"
-import type { FC } from "react"
 
-export const Toolbar: FC<React.PropsWithChildren<unknown>> = styled.div`
+export const Toolbar = styled.div`
   display: flex;
   align-items: center;
   padding: 0.5rem 1rem;

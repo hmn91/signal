@@ -1,7 +1,7 @@
 import styled from "@emotion/styled"
 import { Positioned } from "@signal-app/ui"
-import range from "lodash/range"
 import type { FC } from "react"
+import { rangeTicks } from "../../../helpers/fitView"
 import type { TempoCoordTransform } from "../entities/TempoCoordTransform"
 
 const Container = styled(Positioned)`
@@ -40,18 +40,16 @@ export const TempoGraphAxis: FC<TempoGraphAxisProps> = ({
   return (
     <Container width={width} top={offset}>
       <Values>
-        {range(
-          30 * Math.ceil(transform.maxBPM / 320),
-          transform.maxBPM,
-          30 * Math.ceil(transform.maxBPM / 320),
-        ).map((t) => {
-          const top = Math.round(transform.getY(t))
-          return (
-            <Positioned top={top} key={t}>
-              {t}
-            </Positioned>
-          )
-        })}
+        {rangeTicks({ min: transform.minBPM, max: transform.maxBPM })
+          .slice(1, -1)
+          .map((t) => {
+            const top = Math.round(transform.getY(t))
+            return (
+              <Positioned top={top} key={t}>
+                {t}
+              </Positioned>
+            )
+          })}
       </Values>
     </Container>
   )

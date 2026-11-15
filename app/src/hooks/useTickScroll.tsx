@@ -3,7 +3,7 @@ import { useHydrateAtoms } from "jotai/utils"
 import type { Store } from "jotai/vanilla/store"
 import { createScope, ScopeProvider } from "jotai-scope"
 import { clamp } from "lodash"
-import { type SetStateAction, useEffect, useMemo } from "react"
+import { type SetStateAction, useCallback, useEffect, useMemo } from "react"
 import { Layout } from "../Constants"
 import { TickTransform } from "../entities/transform/TickTransform"
 import { usePlayer } from "./usePlayer"
@@ -67,6 +67,8 @@ export function TickScrollProvider({
 }
 
 export function useTickScroll(store = useStore()) {
+  const { getSong } = useSong()
+  const fitHorizontal = useSetAtom(fitHorizontalAtom, { store })
   return {
     get autoScroll() {
       return useAtomValue(autoScrollAtom, { store })
@@ -105,6 +107,16 @@ export function useTickScroll(store = useStore()) {
     setScaleX: useSetAtom(setScaleXAtom, { store }),
     scaleAroundPointX: useSetAtom(scaleAroundPointXAtom, { store }),
     setAutoScroll: useSetAtom(autoScrollAtom, { store }),
+    fitHorizontal: useCallback(() => {
+      const song = getSong()
+      // endOfSong includes a large editing margin. Fit the actual MIDI content
+      // from tick zero, with one beat of breathing room at the right edge.
+      const lastTick = song.tracks.reduce(
+        (end, track) => Math.max(end, track.endOfTrack),
+        0,
+      )
+      fitHorizontal(Math.max(song.timebase * 4, lastTick + song.timebase))
+    }, [getSong, fitHorizontal]),
   }
 }
 
@@ -144,6 +156,19 @@ export const tickRangeAtom = atom((get) => {
 })
 
 // actions
+const fitHorizontalAtom = atom(null, (get, set, endTick: number) => {
+  const width = get(canvasWidthAtom)
+  if (width <= 0 || endTick <= 0) {
+    return
+  }
+  // Fitting long songs can legitimately require zoom below the manual limit.
+  set(
+    scaleXAtom,
+    Math.min(get(maxScaleXAtom), width / (endTick * Layout.pixelsPerTick)),
+  )
+  set(scrollLeftTicksAtom, 0)
+  set(autoScrollAtom, false)
+})
 const setScrollLeftInPixelsAtom = atom(
   null,
   (get, set, value: SetStateAction<number>) => {
@@ -183,7 +208,7 @@ const setScaleXAtom = atom(null, (get, set, scaleX: number) => {
 const scaleAroundPointXAtom = atom(
   null,
   (get, set, scaleXDelta: number, pixelX: number) => {
-    const minScaleX = get(minScaleXAtom)
+    const minScaleX = Math.min(get(minScaleXAtom), get(scaleXAtom))
     const maxScaleX = get(maxScaleXAtom)
     const transform = get(transformAtom)
     const scrollLeft = get(scrollLeftAtom)

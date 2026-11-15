@@ -1,5 +1,7 @@
 import styled from "@emotion/styled"
 import React, { type FC } from "react"
+import { rangeTicks } from "../../../../helpers/fitView"
+import { useControlRange } from "../../hooks/useControlRange"
 import { GraphAxis } from "../LineGraph/GraphAxis"
 import { VelocityControlCanvas } from "./VelocityControlCanvas"
 
@@ -21,11 +23,12 @@ const PianoVelocityControl: FC<PianoVelocityControlProps> = ({
   height,
   axisWidth,
 }: PianoVelocityControlProps) => {
+  const { range } = useControlRange()
   return (
     <Parent>
       <GraphAxis
         width={axisWidth}
-        values={[1, 32, 64, 96, 127]}
+        values={rangeTicks(range)}
         onClick={() => {}}
       />
       <VelocityControlCanvas width={width} height={height} />

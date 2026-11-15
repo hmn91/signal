@@ -13,6 +13,7 @@ The pane below the piano roll. Edits note velocity and continuous values, such a
 - Switch between the velocity lane and value lanes.
 - Draw and edit values with pencil, curve, and selection tools.
 - Copy, paste, and delete selected points.
+- Separate horizontal, vertical and combined Fit buttons are available for velocity and every value lane. Horizontal fitting shares the piano roll timeline and covers the entire song; vertical fitting uses the current track and lane, with independent ranges per lane.
 
 ## Design Notes
 

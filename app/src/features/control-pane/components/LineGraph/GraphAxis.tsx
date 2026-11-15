@@ -10,12 +10,12 @@ const Parent = styled.div`
 const Values = styled.div`
   position: relative;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 `
 
 const Value = styled.div`
+  position: absolute;
+  width: 100%;
+  box-sizing: border-box;
   padding: 0.3em;
   font-size: 90%;
   color: var(--color-text-secondary);
@@ -40,6 +40,10 @@ export const GraphAxis: FC<GraphAxisProps> = React.memo(
     valueFormatter = (v: number) => v.toString(),
     onClick,
   }) => {
+    const min = values[0] ?? 0
+    const max = values[values.length - 1] ?? 127
+    const positionPercent = (value: number) =>
+      (1 - (value - min) / (max - min || 1)) * 100
     return (
       <Parent style={{ width }}>
         <Values>
@@ -50,6 +54,9 @@ export const GraphAxis: FC<GraphAxisProps> = React.memo(
               <Value
                 key={value}
                 className="AxisValue"
+                style={{
+                  top: `clamp(0px, calc(${positionPercent(value)}% - 0.75rem), calc(100% - 1.5rem))`,
+                }}
                 onClick={() => onClick(value)}
               >
                 {valueFormatter(value)}

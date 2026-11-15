@@ -7,6 +7,7 @@ export class TempoCoordTransform {
     // The height of the drawing area of the graph
     readonly height: number,
     readonly maxBPM = 320,
+    readonly minBPM = 0,
   ) {}
 
   getX(tick: number) {
@@ -14,7 +15,7 @@ export class TempoCoordTransform {
   }
 
   getY(bpm: number) {
-    return (1 - bpm / this.maxBPM) * this.height // 上下反転
+    return (1 - (bpm - this.minBPM) / (this.maxBPM - this.minBPM)) * this.height
   }
 
   getMaxY() {
@@ -26,11 +27,13 @@ export class TempoCoordTransform {
   }
 
   getBPM(pixels: number) {
-    return (1 - pixels / this.height) * this.maxBPM
+    return (
+      this.minBPM + (1 - pixels / this.height) * (this.maxBPM - this.minBPM)
+    )
   }
 
   getDeltaBPM(pixels: number) {
-    return (-pixels / this.height) * this.maxBPM
+    return (-pixels / this.height) * (this.maxBPM - this.minBPM)
   }
 
   fromPosition(position: Point) {

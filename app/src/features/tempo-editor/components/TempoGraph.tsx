@@ -60,7 +60,7 @@ export const TempoGraph: FC = () => {
 
   const scrollLeft = Math.floor(_scrollLeft)
 
-  const containerWidth = size.width
+  const containerWidth = Math.max(0, size.width - AXIS_WIDTH)
   const containerHeight = size.height
 
   const contentHeight = containerHeight - Layout.rulerHeight - BAR_WIDTH

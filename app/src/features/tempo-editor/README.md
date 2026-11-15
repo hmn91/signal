@@ -11,6 +11,7 @@ Edit the song's tempo as a graph over time.
 ## Responsibilities
 
 - Draw tempo changes on the timeline.
+- Separate Fit horizontal, Fit vertical and Fit all controls frame the entire song, the current tempo range, or both. Fitting only changes the viewport.
 - Draw, select, move, delete, copy, and paste tempo points.
 - Scale Tempo references the original MIDI tempo map at the selected playhead, captured when opening a document. Percentage (1–200%) and BPM inputs are linked; a large touch dial follows circular finger/mouse movement: clockwise increases, counterclockwise decreases. A 270-degree turn spans the full range with 100% centred at the top; each side has a 135-degree arc. Grabbing does not jump the value; crossing the angular seam stays continuous, and movement near the centre is ignored. Wheel and arrow keys also work. Repeated adjustments are absolute relative to the original, never compounded. Changes apply automatically after 500 ms without further edits, only after all fingers or mouse buttons are released. Each settled adjustment is one undo step. Reset automatically restores 100%; the dialog stays open, and Close preserves applied changes while cancelling any pending timer. Only a successful local MIDI save or browser MIDI download handoff rebases the original; cloud saves and audio exports do not. Undo/redo and autosave recovery preserve the document's baseline.
 

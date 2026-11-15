@@ -14,6 +14,7 @@ The main note editing surface.
 - Create, select, move, resize, and delete notes.
 - Show other tracks' notes as ghost notes.
 - Draw shared notes as stacked color stripes over their overlapping sections, including overlaps between ghost tracks. Hit areas still belong to the selected track.
+- Fit horizontal shows the entire song; Fit vertical frames the pitches of the selected and visible ghost tracks; Fit all combines both.
 - Quantize, transpose, copy, and paste notes. Preview notes while editing.
 - Coordinate nearby panes, such as the control pane and event list.
 

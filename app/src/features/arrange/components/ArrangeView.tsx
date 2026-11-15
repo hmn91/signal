@@ -113,7 +113,7 @@ export const ArrangeView: FC = () => {
     [setScrollLeftInPixels, setAutoScroll],
   )
 
-  const containerWidth = size.width
+  const containerWidth = Math.max(0, size.width - BAR_WIDTH)
 
   const theme = useTheme()
 

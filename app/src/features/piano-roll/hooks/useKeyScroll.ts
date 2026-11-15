@@ -31,6 +31,7 @@ export function useKeyScroll() {
     setCanvasHeight: useSetAtom(canvasHeightAtom),
     setScaleY: useSetAtom(scaleYAtom),
     scaleAroundPointY: useSetAtom(scaleAroundPointYAtom),
+    fitVertical: useSetAtom(fitVerticalAtom),
   }
 }
 
@@ -50,7 +51,7 @@ const scrollTopInPixelsAtom = atom(
       typeof value === "function" ? value(get(scrollTopInPixelsAtom)) : value
     const transform = get(transformAtom)
     const canvasHeight = get(canvasHeightAtom)
-    const maxY = transform.getMaxY() - canvasHeight
+    const maxY = Math.max(0, transform.getMaxY() - canvasHeight)
     const scrollTop = clamp(y, 0, maxY)
     set(scrollTopKeysAtom, transform.getNoteNumberFractional(scrollTop))
   },
@@ -58,6 +59,33 @@ const scrollTopInPixelsAtom = atom(
 const contentHeightAtom = atom((get) => get(transformAtom).getMaxY())
 
 // actions
+const fitVerticalAtom = atom(null, (get, set, pitches: readonly number[]) => {
+  const height = get(canvasHeightAtom)
+  if (height <= 0) {
+    return
+  }
+  let low = 127
+  let high = 0
+  for (const pitch of pitches) {
+    low = Math.min(low, pitch)
+    high = Math.max(high, pitch)
+  }
+  if (pitches.length === 0) {
+    low = 0
+    high = 127
+  }
+  low = Math.max(0, low - 2)
+  high = Math.min(127, high + 2)
+  const scale = Math.min(
+    SCALE_Y_MAX,
+    height / ((high - low + 1) * Layout.keyHeight),
+  )
+  set(scaleYAtom, scale)
+  const transform = get(transformAtom)
+  const contentCenter =
+    (transform.getY(high) + transform.getY(low) + transform.pixelsPerKey) / 2
+  set(scrollTopInPixelsAtom, contentCenter - height / 2)
+})
 const scaleAroundPointYAtom = atom(
   null,
   (get, set, scaleYDelta: number, pixelY: number) => {
@@ -65,7 +93,7 @@ const scaleAroundPointYAtom = atom(
     const scrollTop = get(scrollTopInPixelsAtom)
     const pixelYInKeys0 = transform.getNoteNumberFractional(scrollTop + pixelY)
     set(scaleYAtom, (prev) =>
-      clamp(prev * (1 + scaleYDelta), SCALE_Y_MIN, SCALE_Y_MAX),
+      clamp(prev * (1 + scaleYDelta), Math.min(prev, SCALE_Y_MIN), SCALE_Y_MAX),
     )
     const updatedTransform = get(transformAtom)
     const updatedScrollTop = get(scrollTopInPixelsAtom)
