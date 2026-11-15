@@ -17,4 +17,5 @@ The track list and per-track controls.
 ## Design Notes
 
 - Track changes are song-level edits and are part of undo and redo.
+- Add Track and Re-order share a normal row after the tracks, with a 2:1 width ratio. During reordering, Save and Cancel replace that row. The controls do not use a sticky layer above menus.
 - Track icons and notes use the MIDI track color when present, otherwise an automatic color derived from the track ID. Reordering does not change the color.

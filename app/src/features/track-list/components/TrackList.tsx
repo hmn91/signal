@@ -17,21 +17,25 @@ const List = styled.div`
 `
 
 const Actions = styled.div`
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 0.5rem;
   padding: 0.5rem;
-  background: var(--color-background);
-  border-bottom: 1px solid var(--color-divider);
+
+  &[data-editing="true"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 `
 
 const Action = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.4rem 0.6rem;
+  justify-content: center;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
   border: 1px solid var(--color-divider);
   border-radius: 0.4rem;
   background: var(--color-background-secondary);
@@ -81,22 +85,6 @@ export const TrackList: FC = () => {
 
   return (
     <List ref={listRef} tabIndex={-1}>
-      <Actions>
-        {editing ? (
-          <>
-            <Action onClick={save}>Save</Action>
-            <Action onClick={finish}>Cancel</Action>
-          </>
-        ) : (
-          <Action
-            disabled={trackIds.length < 2}
-            onClick={() => setDraft({ song, originalIds, ids: trackIds })}
-          >
-            <SwapVerticalIcon size={18} />
-            Re-order
-          </Action>
-        )}
-      </Actions>
       <DraggableList
         enabled={editing}
         items={editing ? draft.ids : trackIds}
@@ -125,7 +113,30 @@ export const TrackList: FC = () => {
           </div>
         )}
       ></DraggableList>
-      {!editing && <AddTrackButton />}
+      <Actions data-editing={editing}>
+        {editing ? (
+          <>
+            <Action type="button" onClick={save}>
+              Save
+            </Action>
+            <Action type="button" onClick={finish}>
+              Cancel
+            </Action>
+          </>
+        ) : (
+          <>
+            <AddTrackButton />
+            <Action
+              type="button"
+              disabled={trackIds.length < 2}
+              onClick={() => setDraft({ song, originalIds, ids: trackIds })}
+            >
+              <SwapVerticalIcon size={18} />
+              Re-order
+            </Action>
+          </>
+        )}
+      </Actions>
     </List>
   )
 }
